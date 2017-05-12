@@ -1,0 +1,71 @@
+#!/bin/bash
+
+#/home/chrys/Documents/thesis/data/Pipelines/RepeatMaskerTrack.Backup
+#/home/chrys/Documents/thesis/data/seqs/hg19/chromFa/hg19.fa
+
+echo "Please give path to the RepeatMaskerTrack."
+read RepTrack
+echo "Please give a numeric JobID for your project."
+read ID
+
+if [[ -z "$ID" ]]; then
+   echo "No ID entered picking a random ID"
+   ID=$(( ( RANDOM % 10000 )  + 1 ))
+   echo ${ID}
+fi
+
+echo "Please make sure that bedtools is in your path and that you have the path to your genome file."
+echo "Please specificy path to your Genome Assembly (hg19/hg38) in fasta format."
+read GenomeLocation
+
+echo "Specificy a Spacer length for the concatenation."
+echo "Refer to README for details. Default is 350."
+read Spacer
+
+if [[ -z "$Spacer" ]]; then
+   echo "No spacer length entered, defaulting to 350"
+   Spacer=350
+fi
+
+echo "Sorting RepeatMaskerTrack by chromosome and starting location..."
+sort -k6,6 -k7,7n ${RepTrack} -o ${RepTrack}
+
+echo "Done.Indexing..."
+PipeLoc=$PWD
+SORTER=${PWD}/RepeatSorter.0.2.pl
+$SORTER ${RepTrack} $ID
+
+echo "Done with sorting and indexing..."
+
+FileName=$(basename ${RepTrack} "$1")
+FileName=${FileName}."Indexed".${ID}
+
+ResultsLocation=${PWD}/results.$ID
+
+echo "Executing merging of overlapping features..."
+
+sort -k1,1 -k2,2n ${ResultsLocation}/$FileName -o ${ResultsLocation}/$FileName
+
+MERGER=${PWD}/Merger.0.4.pl
+$MERGER ${ResultsLocation}/$FileName
+
+FileName=$(basename ${RepTrack} "$1")
+FileName=${FileName}."Indexed"."Merged".${ID}
+
+echo "Merging done."
+echo "WARNING:"
+echo "Creating a concatenated Genome File will require an installation of Bedtools."
+
+bedtools getfasta -fi ${GenomeLocation} -bed ${ResultsLocation}/$FileName > ${ResultsLocation}/ConcatGenome.Raw.${ID}
+
+echo "Done! Creating a spaced concatenated genome file."
+
+CONCATER=${PWD}/ConcatGenome.0.4.pl
+$CONCATER ${ResultsLocation}/ConcatGenome.Raw.${ID} $Spacer
+
+echo "Done...creating index."
+
+INDEX=${PWD}/IndexFromMerge.0.2.pl
+$INDEX ${ResultsLocation}/$FileName $Spacer
+
+echo "Pipeline complete. It is recommended to check the results in IGV."
