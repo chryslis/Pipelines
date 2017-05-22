@@ -50,7 +50,7 @@ MERGER=${PWD}/Merger.0.4.pl
 $MERGER ${ResultsLocation}/$FileName
 
 FileName=$(basename ${RepTrack} "$1")
-FileName=${FileName}."Indexed"."Merged".${ID}
+FileName=${FileName}."Merged".${ID}
 
 echo "Merging done."
 echo "WARNING:"
