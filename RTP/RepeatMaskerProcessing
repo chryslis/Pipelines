@@ -1,0 +1,41 @@
+#!/bin/bash
+
+echo "Path to RepeatMaskerTrack"
+read RepTrack
+
+echo "Sorting..."
+sort -k6,6 -k7,7n ${RepTrack} -o ${RepTrack}
+
+echo "Enter Exclusion Threshold"
+read Limit
+
+Total=$(wc -l $RepTrack | awk '{print $1}')
+
+cut -f11 $RepTrack > SpeciesList
+sort -u SpeciesList > SpeciesUni
+
+for i in $(cat SpeciesUni); 
+do
+	NAME="$i"
+	TYPE=$(grep $i$ SpeciesList | wc -l); 
+	echo $NAME $'\t'$TYPE >> Summary		
+done
+
+rm SpeciesList
+rm SpeciesUni
+
+awk -v var="$Limit" '$2 > var {print}' Summary > Summary.${Limit}
+
+rm Summary
+
+cut -f1 Summary.${Limit} > List
+sort -u List -o List
+
+PERL2=/home/chrys/Documents/thesis/data/Pipelines/RTP/ProcessingSub.pl
+
+$PERL2 $RepTrack $Total
+
+rm List
+rm Summary.${Limit}
+
+echo "Done! Procced to CGP! "
