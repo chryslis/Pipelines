@@ -37,13 +37,21 @@ while (<READ2>) {
 
 	if (exists $sortHash{$line[4]}) {
 
-		my $Coverage = join("\t",@{$sortHash{$line[4]}});
-		my $Annotation = join("\t",@line);
+		#Assuming that after filtering this data is technically not required anymore.
+		#my $Coverage = join("\t",@{$sortHash{$line[4]}});
+		#my $Annotation = join("\t",@line);
+		my $Annotation = $line[3]."\t".$line[4]."\t".$line[5];
 
 		my @temp = @{$sortHash{$line[4]}};
 
+		#The Coverage data is probably not necessary to include anymore
+		#unless ($temp[0] < $mean && $temp[3] < $covCut ) {
+		#	print "$Annotation\t$Coverage\n";
+		#}
+
+		#Likewise, probably not necessary to include start/stop etc...
 		unless ($temp[0] < $mean && $temp[3] < $covCut ) {
-			print "$Annotation\t$Coverage\n";
+			print "$Annotation\n";
 		}
 	}
 }

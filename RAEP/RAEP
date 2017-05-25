@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#/home/chrys/Documents/thesis/data/analysis/DataSets/GSM530651_Dnase/DNAseSet.1.trimmed.fastq
-#/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/ConcatenatedGenome.22517
-#/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/MergeIndex.22517.bed
-
 echo "Specify path to reads."
 #read Reads
 Reads=/home/chrys/Documents/thesis/data/analysis/DataSets/GSM530651_Dnase/DNAseSet.1.trimmed.fastq
@@ -54,7 +50,9 @@ CONSTRUCTOR=${PWD}/GenomeConstructor.pl
 
 echo "Specify path to concatenation index."
 #read Index
-Index=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/MergeIndex.22517.bed
+#Index=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/MergeIndex.22517.bed
+#Also possible to just find the Index like this
+Index=$outDir/MergeIndex.*.bed
 
 echo "Creating a Genome File."
 #$CONSTRUCTOR ${ConcGenome} $outDir
@@ -83,7 +81,27 @@ CONCAT=${PWD}/PostConcat.pl
 #$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
 
 echo "Compressing intermediate Outputs..."
-tar -cvzf $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed
-tar -cvzf $outDir/Alignments.$Mark/$Mark.Coverage.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Coverage.bed
+#tar -cvzf $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed
+#tar -cvzf $outDir/Alignments.$Mark/$Mark.Coverage.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
+echo "Reverting IDs to feature annotation..."
+
+#OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed.*
+
+REVERT=${PWD}/IDReverte.pl
+#$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.Features.bed
+
+echo "Constructing weight vector..."
+#cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed | sort -u > $outDir/Alignments.$Mark/READLIST
+
+
+COUNT=${PWD}/WeightVector.pl
+
+$COUNT $outDir/Alignments.$Mark/$Mark.Features.bed  > $outDir/Alignments.$Mark/$Mark.Features.Weighted.bed
+
+#> $outDir/Alignments.$Mark/READLIST.COUNTS
+#rm $outDir/Alignments.$Mark/READLIST
+
+#awk '{fraction = 1/$2}{print $1"\t"fraction}' $outDir/Alignments.$Mark/READLIST.COUNTS > READLIST.FRACTION
+#rm $outDir/Alignments.$Mark/READLIST.COUNTS
 
