@@ -1,26 +1,43 @@
 #!/bin/bash
 
-echo "Specify path to reads."
+#echo "Specify path to reads."
 #read Reads
-Reads=/home/chrys/Documents/thesis/data/analysis/DataSets/GSM530651_Dnase/DNAseSet.1.trimmed.fastq
+Reads=/home/chrys/Documents/thesis/data/analysis/DataSets/GSM530651_Dnase/SRR066154.trimmed.fastq
 
-echo "Specify path to Conncatenated Genome."
+#echo "Specify path to Conncatenated Genome."
 #read ConcGenome
 ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/ConcatenatedGenome.22517
 
-echo "What Mark is getting aligned?"
+#echo "What Mark is getting aligned?"
 #read Mark
-Mark=DNASE1
+Mark=DNASE154
 
-echo "Creating outoutfolder..."
+#echo "Creating outoutfolder..."
 outDir=$(dirname "${ConcGenome}")
 #mkdir "$outDir/Alignments.$Mark"
-
 #echo "Results will be placed at $outDir/Alignments.$Mark"
+
+echo "Do you want to sort by Species[S] or SuperFamily[F]?"
+read sortType
+sorting=$(echo "${sortType^^}") 
+
+if [[ "$sorting" == "S" ]]
+then 
+	echo "Selected Species"
+
+elif [[ "$sorting" == "F" ]] 
+then
+	echo "Selected SuperFamily"
+else
+	echo "Nothing selected,defaulting to SuperFamily"
+	sorting="F"
+fi
+
 #echo "Starting up bwa..."
 #echo "Is the Genome indexed ?[y/n]"
 #read check
 
+#echo "The pipeline can now run unattended all settings been choosen."
 #if [[ "$check"=="y"  ]]; then
 #	echo "Skipping indexing process..."
 #else
@@ -48,60 +65,122 @@ outDir=$(dirname "${ConcGenome}")
 PipeLoc=$PWD
 CONSTRUCTOR=${PWD}/GenomeConstructor.pl
 
-echo "Specify path to concatenation index."
-#read Index
-#Index=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/MergeIndex.22517.bed
-#Also possible to just find the Index like this
 Index=$outDir/MergeIndex.*.bed
 
-echo "Creating a Genome File."
+#echo "Creating a Genome File."
 #$CONSTRUCTOR ${ConcGenome} $outDir
 
-sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
+#sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
 
-echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
+#echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
 #bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
 
 
-echo "Calculating coverage..."
-
-#bedtools coverage -sorted -abam $outDir/Alignments.$Mark/$Mark.sorted.bam -b $outDir/ResortMergeIndex > $outDir/Alignments.$Mark/$Mark.Coverage.bed
+#echo "Calculating coverage..."
 #bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam   > $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-
-echo "Creating annotation..."
+#echo "Creating annotation..."
 #bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed > $outDir/Alignments.$Mark/$Mark.Annotation.bed
 
-echo "Post-Processing Annotation file..."
+#echo "Post-Processing Annotation file..."
 
 #cut -f1,2,3,4,16,17 $outDir/Alignments.$Mark/$Mark.Annotation.bed > $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed 
 #rm $outDir/Alignments.$Mark/$Mark.Annotation.bed
 
-CONCAT=${PWD}/PostConcat.pl
+#CONCAT=${PWD}/PostConcat.pl
 #$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
 
 echo "Compressing intermediate Outputs..."
 #tar -cvzf $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed
 #tar -cvzf $outDir/Alignments.$Mark/$Mark.Coverage.bed.tar.gz $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-echo "Reverting IDs to feature annotation..."
+echo "Constructing weighted vector.."
 
-#OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed.*
+COUNT=${PWD}/WeightVector.pl
+#$COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
+VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
+#echo "Reverting IDs to feature annotation..."
+OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed.*
 REVERT=${PWD}/IDReverte.pl
 #$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.Features.bed
 
-echo "Constructing weight vector..."
-#cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed | sort -u > $outDir/Alignments.$Mark/READLIST
+echo "Counting features..."
+#TOTAL=$(wc -l $outDir/Alignments.$Mark/$Mark.Features.bed)
+TOTAL=398677991
+LIST=$outDir/Alignments.$Mark/$Mark.SummarySuper;
+
+#if [[ "$sorting" == "S" ]]; then
+#
+#	cut -f4 $OriginalIndex > $outDir/Alignments.$Mark/$Mark.FamList
+#	sort -u $outDir/Alignments.$Mark/$Mark.FamList > $outDir/Alignments.$Mark/$Mark.FamUni
+#
+#	for i in $(cat $outDir/Alignments.$Mark/$Mark.FamUni);  
+#		do 
+#			NAME="$i"; 
+#			TYPE=$(grep "$i$" $outDir/Alignments.$Mark/$Mark.FamList | wc -l);  
+#			echo $NAME $'\t'$TYPE >> $outDir/Alignments.$Mark/$Mark.SummaryFam;
+#	done
+#
+#	LIST=$outDir/Alignments.$Mark/$Mark.SummaryFam;
+#else
+#
+#	cut -f6 $OriginalIndex > $outDir/Alignments.$Mark/$Mark.SuperList
+#	sort -u $outDir/Alignments.$Mark/$Mark.SuperList > $outDir/Alignments.$Mark/$Mark.SuperUni
+#
+#	for i in $(cat $outDir/Alignments.$Mark/$Mark.SuperUni);  
+#		do 
+#			NAME="$i"; 
+#			TYPE=$(grep "$i$" $outDir/Alignments.$Mark/$Mark.SuperList | wc -l);  
+#			echo $NAME $'\t'$TYPE >> $outDir/Alignments.$Mark/$Mark.SummarySuper;
+#	done
+#
+#	LIST=$outDir/Alignments.$Mark/$Mark.SummarySuper;
+#fi
+
+#echo "Executing Enrichment..."
+
+ENRICHMENT=${PWD}/ReadEnrichment.pl
+$ENRICHMENT $outDir/Alignments.$Mark/$Mark.Features.bed $TOTAL $sorting $VECTOR $LIST
+
+echo "Preparing Shuffle..."
+
+mkdir $outDir/Alignments.$Mark/Shuffle.$Mark
+
+cut -f2 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffleID
+cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.READLIST 
+
+#TOTAL=$(wc -l $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.READLIST)
+TOTAL=398677991
+
+start=$(date +"%T")
+echo "PileLaunch: $start"
+
+for (( i = 0; i < 10; i++ )); do
+
+	start=$(date +"%T")
+	echo "start: $start"
+
+	echo "	Executing shuffle ${i}"
+	echo "	Shuffling..."
+	shuf $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffleID > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffleID."${i}"
+
+	echo "	Combining..."
+	paste $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.READLIST $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffleID."${i}" > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}"
+	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffleID."${i}"
+
+	echo "	Reverting IDs to features for shuffle..."
+	$REVERT $OriginalIndex $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle.Features."${i}"
+	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}"
+
+	echo "	Calculating Shuffled Enrichment..."
+	$ENRICHMENT $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle.Features."${i}" $TOTAL $sorting $VECTOR $LIST
+	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle.Features."${i}"
+
+	end=$(date +"%T")
+	echo "End: $end"
+done
 
 
-COUNT=${PWD}/WeightVector.pl
 
-$COUNT $outDir/Alignments.$Mark/$Mark.Features.bed  > $outDir/Alignments.$Mark/$Mark.Features.Weighted.bed
-
-#> $outDir/Alignments.$Mark/READLIST.COUNTS
-#rm $outDir/Alignments.$Mark/READLIST
-
-#awk '{fraction = 1/$2}{print $1"\t"fraction}' $outDir/Alignments.$Mark/READLIST.COUNTS > READLIST.FRACTION
-#rm $outDir/Alignments.$Mark/READLIST.COUNTS
 
