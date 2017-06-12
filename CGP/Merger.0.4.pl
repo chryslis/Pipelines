@@ -33,7 +33,6 @@ open(FH,$file2) || die "Could not open $file2: $!\n";
 open(OUT,">",$pathToOutput) || die "Could not create Output: $!\n";
 
 defined($_ = <FH>) or exit;
-#$_ = <FH>;
 chomp;
 my @sample = split;
 my $sampleID = $sample[6];

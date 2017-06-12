@@ -44,7 +44,7 @@ TOTAL=398677991
 
 start=$(date +"%T")
 
-for (( i = 5; i < 6; i++ )); do
+for (( i = 9; i < 12; i++ )); do
 
 	start=$(date +"%T")
 	echo "start: $start"

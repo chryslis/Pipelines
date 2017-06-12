@@ -8,7 +8,7 @@ use File::Basename;
 
 #requieres input to be sorted by chromosome and length
 #use sort -k1,1 -k2,2n for bed files
-#Formally known as artificalGenome0.2.pl
+#OldName: artificalGenome0.2.pl
 
 my $start = time();
 my $file = $ARGV[0];
@@ -51,7 +51,7 @@ while (<READ>) {
 	my @temp = split("\t",$line);
 	#Make exclusion list accessible for user later
 	#List of Exclusions: Low_Complexity,Simple_Repeat,"Satellite","tRNA",
-	if ($temp[12] eq "Low_complexity" || $temp[12] eq "Simple_repeat" || $temp[12] eq "Satellite" || $temp[12] eq "tRNA" || $temp[12] eq "snRNA" || $temp[12] eq "srpRNA" || $temp[12] eq "scRNA" || $temp[12] eq "rRNA") {
+	if ($temp[12] eq "Low_complexity" || $temp[12] eq "Simple_repeat" || $temp[12] eq "Satellite" || $temp[12] eq "tRNA" || $temp[12] eq "snRNA" || $temp[12] eq "srpRNA" || $temp[12] eq "scRNA" || $temp[12] eq "rRNA" || $temp[12] =~ m/(\D+\?)/g) {
 		next;
 	}elsif($temp[11] eq "Satellite" || $temp[11] eq "RNA" || $temp[11] =~ m/\D+\?/g){
 		next;
