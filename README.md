@@ -1,3 +1,9 @@
-CGP: The Comprehensive Genome concatination Pipeline
+# README - Tools in this Repository #
+
+CGP: The Comprehensive Genome Concatination Pipeline
 RAP: The Read Alignment and Enrichment Pipeline
-RTP: RepeatMasker Track Preprocessing
+RTP: RepeatMaskerTrack Preprocessing
+
+
+
+

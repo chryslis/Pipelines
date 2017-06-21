@@ -9,12 +9,22 @@ use Cwd;
 my $start = time();
 my $current = 0;
 
+#File containing the Reads with the IDs (Location Anchor)
 my $input = $ARGV[0];
-my $lineCount = $ARGV[1];
-my $sortType = $ARGV[2];
+
+#Sorting by super or by species
+my $sortType = $ARGV[1];
+
+
+#Location of the weight vector
+my $weightVecor = $ARGV[2];
+
+
+#Location of the List containing the Occurences of the species or families in the genome
+my $famCounts = $ARGV[3];
+
+#Just declared here for global
 my $selection;
-my $weightVecor = $ARGV[3];
-my $famCounts = $ARGV[4];
 
 if ($sortType eq "F") {
 	$sortType = 2;
@@ -30,16 +40,24 @@ if ($sortType eq "F") {
 	$selection="SuperFamily"
 }
 
+#Reading prepared weight Vector
 open(GETWEIGHTS,$weightVecor) || die "Could not reade weight vector: $!";
 
+#Just some feedback...
 print "\tProcessing weight vector...\n";
+#Hash for saving the weights of a specific read
 my %weightsHash;
 
 while (<GETWEIGHTS>) {
 	chomp;
 	my @temp = split("\t",$_);
+	#File is ReadNumber weight with tab as delimiter
 	$weightsHash{$temp[0]} = $temp[1];
 }
+
+close(GETWEIGHTS);
+
+#Processing stuff to put everything in the proper folders
 
 my $fileName = basename($input);
 my @temp1 = split(/$fileName/,$input);
@@ -47,56 +65,31 @@ my $path = $temp1[0];
 my $outPut = $path;
 my @temp2 = split(/\./,$fileName);
 my $len = $#temp2;
-$temp2[$len-1] = "Enrichment".$selection;
+$temp2[$len-1] = "Shuffle.Enrichment.".$selection;
 my $outName = join(".",@temp2);
 my $outPutPath = $path.$outName;
 
-open(READ,$input) || die "Could not read $input: $!";
-
-my %CountingHash;
-my $counter = 0;
 
 
 print "\tProcessing Features and Reads...\n";
 
-while (<READ>) {
+my %CountingHash;
 
-	my $progress = int(($counter/$lineCount)*100);
-	print "\tProgress: $progress % \r";
+while (<STDIN>) {
 	chomp;
 	my @temp = split("\t",$_);
 	my $sortingElement = $temp[$sortType];
 	my $read = $temp[0];
-	$CountingHash{$read}{$sortingElement} += 1;
-	$counter++;
+	$CountingHash{$sortingElement} += $weightsHash{$read};
 
 }
 
-open(OUTPUT,">$outPutPath" ) || die "Could not create $outPutPath:$!";
-#open(OUTPUT,">","TestOut" ) || die "Could not create $outPutPath:$!";
+open(OUTPUT,">$outPutPath" ) || die "Could not create $outPutPath:$!";;
 
-print"\tDoing weight calculations...\n";
-my %resultHash;
-$counter = 0;
-my $size = scalar(keys % weightsHash);
+print"\tPreparing outputs...\n";
 
-foreach my $Reads(keys %weightsHash){
-	my $progress = int(($counter/$size)*100);
-	print "\tProgress: $progress % \r";
 
-	if ( exists $CountingHash{$Reads} ) {
-
-		foreach my $fam (keys %{$CountingHash{$Reads}} ){
-
-			my $FamilyPerReadCount = $CountingHash{$Reads}{$fam};
-			my $weight = $weightsHash{$Reads};
-
-			$resultHash{$fam} += $FamilyPerReadCount*$weight;
-		}
-	}
-	$counter ++;
-}
-
+#Created counts of families beforehand to save time. Just reading a file with max ~1300 lines
 open(GETFAMCOUNTS,$famCounts) || die "Could not open $famCounts: $!";
 
 my %famCounts;
@@ -111,15 +104,19 @@ while (<GETFAMCOUNTS>){
 	$famCounts{$fam} = $count;
 }
 
-print "\tPrinting Outputs!\n";
+foreach my $keys(sort keys %CountingHash){
 
-foreach my $keys(sort keys %resultHash){
-	my $norm = $resultHash{$keys}/$famCounts{$keys};
-	print OUTPUT "$keys\t$resultHash{$keys}\t$famCounts{$keys}\t$norm\n";
+	my $norm = $CountingHash{$keys}/$famCounts{$keys};
+	my $rounded = sprintf "%.3f", $norm;
+
+	print OUTPUT "$keys\t";
+	printf OUTPUT "%.3f\t",$CountingHash{$keys};
+	printf OUTPUT "%.3f\t",$famCounts{$keys};
+	print OUTPUT "$rounded\t";
+	print OUTPUT "\n";
 
 }
 
-close(READ);
 close(OUTPUT);
 
 my $stop = time();
@@ -127,3 +124,4 @@ my $runTime = int((($stop - $start)/60));
 
 print "\n";
 print "\tDone!\t Finished in $runTime Minutes.\n";
+

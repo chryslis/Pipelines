@@ -17,7 +17,7 @@ sort -u SpeciesList > SpeciesUni
 for i in $(cat SpeciesUni); 
 do
 	NAME="$i"
-	TYPE=$(grep $i$ SpeciesList | wc -l); 
+	TYPE=$(grep "$i$" SpeciesList | wc -l); 
 	echo $NAME $'\t'$TYPE >> Summary		
 done
 
@@ -36,6 +36,5 @@ PERL2=/home/chrys/Documents/thesis/data/Pipelines/RTP/ProcessingSub.pl
 $PERL2 $RepTrack $Total
 
 rm List
-rm Summary.${Limit}
-
 echo "Done! Procced to CGP! "
+

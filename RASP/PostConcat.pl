@@ -17,6 +17,7 @@ open(READ,$inPut2) || die "Could not open $inPut2: $!";
 while (<READ>) {
 	chomp;
 	my @line = split("\t",$_);
+
 	$sortHash{$line[3]} = [ $line[4],$line[5],$line[6],$line[7] ];
 	push(@readsPerInstance,$line[4]);
 }
@@ -33,23 +34,15 @@ open(READ2,$inPut) || die "Could not open $inPut: $!";
 
 while (<READ2>) {
 	chomp;
-	my @line = split("\t",$_);
+	my @line = split(/\s/,$_);
+
 
 	if (exists $sortHash{$line[4]}) {
 
-		#Assuming that after filtering this data is technically not required anymore.
-		#my $Coverage = join("\t",@{$sortHash{$line[4]}});
-		#my $Annotation = join("\t",@line);
-		my $Annotation = $line[3]."\t".$line[4]."\t".$line[5];
+		my $Annotation = $line[3]."\t".$line[4];
 
 		my @temp = @{$sortHash{$line[4]}};
 
-		#The Coverage data is probably not necessary to include anymore
-		#unless ($temp[0] < $mean && $temp[3] < $covCut ) {
-		#	print "$Annotation\t$Coverage\n";
-		#}
-
-		#Likewise, probably not necessary to include start/stop etc...
 		unless ($temp[0] < $mean && $temp[3] < $covCut ) {
 			print "$Annotation\n";
 		}
