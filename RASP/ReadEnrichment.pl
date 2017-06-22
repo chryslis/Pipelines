@@ -65,7 +65,7 @@ my $path = $temp1[0];
 my $outPut = $path;
 my @temp2 = split(/\./,$fileName);
 my $len = $#temp2;
-$temp2[$len-1] = "Shuffle.Enrichment.".$selection;
+$temp2[$len-1] = "Shuffle.Enrichment".$selection;
 my $outName = join(".",@temp2);
 my $outPutPath = $path.$outName;
 

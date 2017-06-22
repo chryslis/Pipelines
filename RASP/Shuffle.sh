@@ -7,7 +7,7 @@ ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.
 outDir=$(dirname "${ConcGenome}")
 #echo "What Mark is getting aligned?"
 #read Mark
-Mark=DNASE154
+Mark=H3K4me3
 #echo "What sorting was used?[F/S]"
 sorting=F
 
@@ -36,7 +36,7 @@ mkdir $outDir/Alignments.$Mark/Shuffle.$Mark
 
 start=$(date +"%T")
 
-for (( i = 17; i < 18; i++ )); do
+for (( i = 2; i < 3; i++ )); do
 
 	mkdir $outDir/Alignments.$Mark/Shuffle.$Mark/Temp
 

@@ -84,6 +84,7 @@ PipeLoc=$PWD
 #echo "Creating annotation..."
 #bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed | cut -f1,2,3,4,16,17 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.bed
 
+#Backing this line up, not necessary anymore
 #cut -f1,2,3,4,16,17 $outDir/Alignments.$Mark/$Mark.Annotation.bed | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.Processed.bed 
 
 #CONCAT=${PWD}/PostConcat.pl
@@ -137,4 +138,4 @@ ENRICHMENT=${PWD}/ReadEnrichment.pl
 
 
 $REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Features.bed $sorting $VECTOR $LIST
-#rm $outDir/Alignments.$Mark/$Mark.Filtered.bed
+rm $outDir/Alignments.$Mark/$Mark.Filtered.bed

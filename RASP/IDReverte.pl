@@ -26,11 +26,7 @@ while (<READ>) {
 	#In this file, IDs and Families are still line by line
 	my $ID = $temp[6];
 	my @primaryTemp = split(/\:/,$ID);
-
-	#In the file, the ordering is with 1 based bed format: chr/start/stop/Sub-Families/Class/Super-Families.
-	#For changing the respective family -> use either 3/4/5 as indicies.
 	my $Family = $temp[3]."\t".$temp[5];
-
 	#the ID hash will containt the ID Number and the respective family this number belongs to.
 	$IDhash{$primaryTemp[1]} = $Family;
 }

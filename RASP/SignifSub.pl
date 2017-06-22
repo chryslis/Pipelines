@@ -93,7 +93,7 @@ for my $keys (keys %reportHash){
 	$reportHash{$keys} = $reportHash{$keys}/$permNum;
 }
 
-my $outPath = $path."/".$mark.".$decomp[1].Analysis2";
+my $outPath = $path."/".$mark.".$decomp[1].Analysis";
 
 open(OUT,">",$outPath) || die "Could not create $outPath: $!";
 
@@ -106,5 +106,3 @@ foreach my $keys(sort keys %reportHash){
 }
 
 print "Number of Shuffles was: $permNum \n";
-
-print Dumper \%Backup
