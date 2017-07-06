@@ -19,10 +19,6 @@ my $sortType = $ARGV[1];
 #Location of the weight vector
 my $weightVecor = $ARGV[2];
 
-
-#Location of the List containing the Occurences of the species or families in the genome
-my $famCounts = $ARGV[3];
-
 #Just declared here for global
 my $selection;
 
@@ -65,7 +61,7 @@ my $path = $temp1[0];
 my $outPut = $path;
 my @temp2 = split(/\./,$fileName);
 my $len = $#temp2;
-$temp2[$len-1] = "Shuffle.Enrichment".$selection;
+$temp2[$len-1] = "Enrichment".$selection;
 my $outName = join(".",@temp2);
 my $outPutPath = $path.$outName;
 
@@ -75,6 +71,7 @@ print "\tProcessing Features and Reads...\n";
 
 my %CountingHash;
 
+#Getting counting data from STD I/O
 while (<STDIN>) {
 	chomp;
 	my @temp = split("\t",$_);
@@ -89,30 +86,11 @@ open(OUTPUT,">$outPutPath" ) || die "Could not create $outPutPath:$!";;
 print"\tPreparing outputs...\n";
 
 
-#Created counts of families beforehand to save time. Just reading a file with max ~1300 lines
-open(GETFAMCOUNTS,$famCounts) || die "Could not open $famCounts: $!";
-
-my %famCounts;
-
-while (<GETFAMCOUNTS>){
-	chomp;
-	my @temp = split("\t",$_);
-	my $fam = $temp[0];
-	my $count = $temp[1];
-
-	$fam =~ s/^\s+|\s+$//g;
-	$famCounts{$fam} = $count;
-}
-
 foreach my $keys(sort keys %CountingHash){
 
-	my $norm = $CountingHash{$keys}/$famCounts{$keys};
-	my $rounded = sprintf "%.3f", $norm;
-
+	#Printing Feature 	Counts
 	print OUTPUT "$keys\t";
 	printf OUTPUT "%.3f\t",$CountingHash{$keys};
-	printf OUTPUT "%.3f\t",$famCounts{$keys};
-	print OUTPUT "$rounded\t";
 	print OUTPUT "\n";
 
 }

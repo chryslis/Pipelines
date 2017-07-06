@@ -5,7 +5,14 @@ use warnings;
 use Data::Dumper qw(Dumper);
 use List::Util qw(sum);
 
+#The general purpose of this script is a filtering step.
+#Two filters are getting applied here:
+#First filter is the total amount of reads covering a feature.
+#The mean sub can be used to remove all features lower then the mean.
+
+# Input 1 is the bedintersected file
 my $inPut = $ARGV[0];
+# Input 2 is the coverage calculation by bedtools.
 my $inPut2 = $ARGV[1];
 my $mark = $ARGV[2];
 my %sortHash;
@@ -26,7 +33,15 @@ sub mean{
 	return sum(@_)/@_;
 }
 
-my $mean = int ( mean(@readsPerInstance) ) ;
+#Mean number of reads covering a feature. Change this as needed
+#my $threshold = int ( mean(@readsPerInstance) ) ;
+
+#Having at least one read covering half of a feature is the currently used filter.
+my $threshold = 1;
+
+#Fraction of bases with non-zero coverage. Meaning that very clipped features will
+#be thrown out. At this point, it is required that at least 60% of the bases have non-zero cov and
+#that they have a certain amount of reads overlapping them ( defined by the threshold variable).
 my $covCut = 0.60;
 
 close(READ);
@@ -43,12 +58,15 @@ while (<READ2>) {
 
 		my @temp = @{$sortHash{$line[4]}};
 
-		unless ($temp[0] < $mean && $temp[3] < $covCut ) {
+		#Filtering happens here, adjust if needed
+
+		unless ($temp[0] < $threshold && $temp[3] < $covCut ) {
 			print "$Annotation\n";
 		}
 	}
 }
 
+close(READ2);
 
 
 
