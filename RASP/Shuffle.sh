@@ -7,7 +7,7 @@ ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.
 outDir=$(dirname "${ConcGenome}")
 #echo "What Mark is getting aligned?"
 #read Mark
-Mark=H3K27acBQ
+Mark=H3K4me1
 #echo "What sorting was used?[F/S]"
 #read sortType
 sortType=S
@@ -15,14 +15,19 @@ sorting=$(echo "${sortType^^}")
 
 if [[ "$sorting" == "S" ]]
 then 
-	echo "Selected Species"
+	echo "Selected species"
+	LIST=$outDir/Species.Summary.*
+	SELECTION=Species
 
 elif [[ "$sorting" == "F" ]] 
 then
 	echo "Selected SuperFamily"
+	LIST=$outDir/Super.Summary.*
+	SELECTION=SuperFamily
 else
-	echo "Nothing selected,defaulting to SuperFamily"
-	sorting="F"
+	echo "Nothing selected,defaulting to species"
+	sorting="S"
+	LIST=$outDir/Species.Summary.*
 fi
 
 
@@ -34,9 +39,7 @@ VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
 mkdir $outDir/Alignments.$Mark/Shuffle.$Mark
 
-
-
-for (( i = 7; i < 15; i++ )); do
+for (( i = 2; i < 2; i++ )); do
 
 	echo "Executing shuffle: ${i}"
 
@@ -68,8 +71,15 @@ for (( i = 7; i < 15; i++ )); do
 	echo "	Reverting IDs to features for shuffle..."
 
 	#Final steps for processing.
-	$REVERT $OriginalIndex $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" | $ENRICHMENT $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" $sorting $VECTOR
+	$REVERT $OriginalIndex $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" | $ENRICHMENT $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" $sorting $VECTOR $LIST
 	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}"
 
 
 done
+
+SIGNIF=${PWD}/SignifSub.pl;
+$SIGNIF $outDir/Alignments.$Mark/$Mark.Enrichment$SELECTION.Result
+
+FDR=${PWD}/FDR.R 
+
+Rscript --vanilla $FDR $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis.Adjusted

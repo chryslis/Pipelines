@@ -5,8 +5,6 @@ use strict;
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq);
 
-my $start = time();
-
 #Input requires the location of 
 #my $AlignmentLocations = $ARGV[0];
 my $AlignmentLocations = "/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/";
@@ -24,8 +22,8 @@ while (readdir RESULTS) {
 		
 	}
 }
-
-my @AnalysiedMarks;
+#Checking fo
+my @AllMarks;
 
 foreach my $folders (@Alignments){
 
@@ -34,12 +32,13 @@ foreach my $folders (@Alignments){
 	opendir (ANALYSIS, $tempPath) || die "Could not read folder $!";
 
 	while (readdir ANALYSIS) {
-
-		if ($_ =~ m/\.Analysis/g) {
+		#This still needs correction because fdr is not yet implemented
+		if ($_ =~ m/\.Analysis\.Adjusted/g) {
 
 			$tempPath = $AlignmentLocations.$folders."/".$_;
 
-			push(@AnalysiedMarks,$tempPath);
+			push(@AllMarks,$tempPath);
+
 		
 		}	
 	}
@@ -51,10 +50,10 @@ my %ResultsHash;
 #Just temp;
 my $signif = 0.05;
 
-my @Fams;
+my @Features;
 my @Marks;
 
-foreach my $AnalysisFiles(@AnalysiedMarks){
+foreach my $AnalysisFiles(@AllMarks){
 
 	my @temp = split(/\//,$AnalysisFiles);
 	my @temp2  = split(/\./,$temp[@temp-1]);
@@ -72,31 +71,36 @@ foreach my $AnalysisFiles(@AnalysiedMarks){
 		}
 
 		my @temp = split("\t",$_);
-		my $fam = $temp[0];
-		push(@Fams,$fam);
-		my $pVal = $temp[4];
+		my $feature = $temp[0];
+		push(@Features,$feature);
+		my $pVal = $temp[3];
 		my $bin;
-
 		if ($pVal < $signif) {
 			$bin = 1;
 		}else{
 			$bin = 0;
 		}
 
-		$ResultsHash{$mark}{$fam} = $bin;
+		$ResultsHash{$mark}{$feature} = $bin;
 
 	}	
 }
 
-my @uniqFams = uniq sort @Fams;
+my @uniqFeatures = uniq sort @Features;
 my @uniqMarks = uniq sort @Marks;
-@Fams = undef;
+@Features = undef;
 @Marks = undef;
 
+my @temp =split("/\//",$AlignmentLocations);
+my $dump = $temp[$#temp];
+$dump =~ m/([0-9]+)/;
+my $ID = $1;
 
-open(OUTPUT,">TestResult");
 
-my $header = join("\t",@uniqFams);
+
+open(OUTPUT,">$AlignmentLocations/EnrichmentMatrix.$ID");
+
+my $header = join("\t",@uniqFeatures);
 print OUTPUT "\t$header";
 print  OUTPUT "\n";
 
@@ -110,11 +114,11 @@ foreach my $marks(@uniqMarks){
 
 	print OUTPUT "$marks";
 
-	foreach my $fams(@uniqFams){
+	foreach my $feature(@uniqFeatures){
 
-		if (exists $ResultsHash{$marks}{$fams}) {
+		if (exists $ResultsHash{$marks}{$feature}) {
 
-			print OUTPUT "\t$ResultsHash{$marks}{$fams}"; 
+			print OUTPUT "\t$ResultsHash{$marks}{$feature}"; 
 			
 		}else{
 

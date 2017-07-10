@@ -24,13 +24,16 @@ sorting=$(echo "${sortType^^}")
 if [[ "$sorting" == "S" ]]
 then 
 	echo "Selected Species"
+	LIST=$outDir/Species.Summary.*
 
 elif [[ "$sorting" == "F" ]] 
 then
 	echo "Selected SuperFamily"
+	LIST=$outDir/Super.Summary.*
 else
-	echo "Nothing selected,defaulting to SuperFamily"
-	sorting="F"
+	echo "Nothing selected,defaulting to species."
+	sorting="S"
+	LIST=$outDir/Species.Summary.*
 fi
 
 
@@ -47,22 +50,22 @@ else
 	bwa index $ConcGenome
 fi
 
-echo "Starting alignment..."
-bwa mem -a -t 3 -v 3 $ConcGenome $Reads > $outDir/Alignments.$Mark/$Mark.sam
+# echo "Starting alignment..."
+# bwa mem -a -t 3 -v 3 $ConcGenome $Reads > $outDir/Alignments.$Mark/$Mark.sam
 
-echo "Aligment done..."
-echo "Doing some converting..."
+# echo "Aligment done..."
+# echo "Doing some converting..."
 
-samtools view -Sb $outDir/Alignments.$Mark/$Mark.sam -o $outDir/Alignments.$Mark/$Mark.bam
-echo "Removing sam and sorting *.bam"
+# samtools view -Sb $outDir/Alignments.$Mark/$Mark.sam -o $outDir/Alignments.$Mark/$Mark.bam
+# echo "Removing sam and sorting *.bam"
 
-rm $outDir/Alignments.$Mark/$Mark.sam
+# rm $outDir/Alignments.$Mark/$Mark.sam
 
-samtools sort $outDir/Alignments.$Mark/$Mark.bam > $outDir/Alignments.$Mark/$Mark.sorted.bam
-rm $outDir/Alignments.$Mark/$Mark.bam
+# samtools sort $outDir/Alignments.$Mark/$Mark.bam > $outDir/Alignments.$Mark/$Mark.sorted.bam
+# rm $outDir/Alignments.$Mark/$Mark.bam
 
-echo "Indexing *.bam"
-samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
+# echo "Indexing *.bam"
+# samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
 
 PipeLoc=$PWD
 CONSTRUCTOR=${PWD}/GenomeConstructor.pl
@@ -70,50 +73,43 @@ CONSTRUCTOR=${PWD}/GenomeConstructor.pl
 Index=$outDir/MergeIndex.*.bed
 
 echo "Creating a Genome File."
-$CONSTRUCTOR ${ConcGenome} $outDir
+#$CONSTRUCTOR ${ConcGenome} $outDir
 
-sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
+#sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
 
-echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
-bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
+# echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
+# bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
 
 
-echo "Calculating coverage..."
-bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam   > $outDir/Alignments.$Mark/$Mark.Coverage.bed
+# echo "Calculating coverage..."
+# bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam   > $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-echo "Creating annotation..."
-bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed | cut -f1,2,3,4,16,17 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.bed
+# echo "Creating annotation..."
+# bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed | cut -f1,2,3,4,16,17 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.bed
 
 CONCAT=${PWD}/PostConcat.pl
-$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
+#$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
 #rm $outDir/Alignments.$Mark/$Mark.Annotation.bed
 #rm $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
 echo "Constructing weighted vector..."
 COUNT=${PWD}/WeightVector.pl
-$COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
+#$COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
 VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
 OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed*
 
 echo "Counting features..."
-
-
 echo "Reverting IDs to feature annotation and calculating enrichment..."
 
 REVERT=${PWD}/IDReverte.pl
 ENRICHMENT=${PWD}/ReadEnrichment.pl
 
-
-$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Filtered.bed $sorting $VECTOR
-
+#$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Filtered.bed $sorting $VECTOR $LIST
 
 cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.ReadList
 cut -f2 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.IDList
 
 echo "Done!"
-
-echo "Do you want to delete superflus files ? [y/n]"
-
 #rm $outDir/Alignments.$Mark/$Mark.Filtered.bed 
 #rm $outDir/Alignments.$Mark/$Mark.*.bam*
