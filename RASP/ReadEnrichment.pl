@@ -15,7 +15,6 @@ my $input = $ARGV[0];
 #Sorting by super or by species
 my $sortType = $ARGV[1];
 
-
 #Location of the weight vector
 my $weightVecor = $ARGV[2];
 
@@ -43,6 +42,8 @@ open(GETWEIGHTS,$weightVecor) || die "Could not reade weight vector: $!";
 print "\tProcessing weight vector...\n";
 #Hash for saving the weights of a specific read
 my %weightsHash;
+#Hash for saving the occurence of a feature in the alignment
+my %occurHash;
 
 while (<GETWEIGHTS>) {
 	chomp;
@@ -69,6 +70,7 @@ my $outPutPath = $path.$outName;
 
 print "\tProcessing Features and Reads...\n";
 
+#Hash for Couting / Saving the weighted features
 my %CountingHash;
 
 #Getting counting data from STD I/O
@@ -78,6 +80,8 @@ while (<STDIN>) {
 	my $sortingElement = $temp[$sortType];
 	my $read = $temp[0];
 	$CountingHash{$sortingElement} += $weightsHash{$read};
+	
+
 
 }
 

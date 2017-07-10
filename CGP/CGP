@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#/home/chrys/Documents/thesis/data/Pipelines/RepeatMaskerTrack.Backup
-#/home/chrys/Documents/thesis/data/seqs/hg19/chromFa/hg19.fa
-
 echo "Please give path to the RepeatMaskerTrack."
 read RepTrack
 echo "Please give a numeric JobID for your project."
@@ -30,7 +27,8 @@ fi
 echo "Sorting RepeatMaskerTrack by chromosome and starting location..."
 sort -k6,6 -k7,7n ${RepTrack} -o ${RepTrack}
 
-echo "Done.Indexing..."
+echo "Done"
+echo "Indexing..."
 PipeLoc=$PWD
 SORTER=${PWD}/RepeatSorter.0.2.pl
 $SORTER ${RepTrack} $ID
@@ -41,6 +39,37 @@ FileName=$(basename ${RepTrack} "$1")
 FileName=${FileName}."Indexed".${ID}
 
 ResultsLocation=${PWD}/results.$ID
+
+cut -f4 ${ResultsLocation}/$FileName > $ResultsLocation/SpeciesList.${ID}
+cut -f6 ${ResultsLocation}/$FileName > $ResultsLocation/SuperList.${ID}
+
+sort -u ${ResultsLocation}/SpeciesList.${ID} > ${ResultsLocation}/SpeciesUni.${ID}
+sort -u ${ResultsLocation}/SuperList.${ID} > ${ResultsLocation}/SuperUni.${ID}
+
+for i in $(cat ${ResultsLocation}/SpeciesUni.${ID});  
+	do 
+		NAME="$i"; 
+		TYPE=$(grep -w "$i$" ${ResultsLocation}/SpeciesList.${ID} | wc -l | awk '{print $1'} );
+		TOTAL=$(grep -w $i ${ResultsLocation}/$FileName | awk '{len=$3-$2;sum += len}END{print sum}' )
+		AVG=$(($TOTAL/$TYPE))
+		echo $NAME $'\t'$TYPE $'\t'$TOTAL$'\t'$AVG >> ${ResultsLocation}/Species.Summary.${ID};
+done
+
+exit
+
+for i in $(cat ${ResultsLocation}/SuperUni.${ID});  
+	do 
+		NAME="$i"; 
+		TYPE=$(grep -w "$i$" ${ResultsLocation}/SuperList.${ID} | wc -l | awk '{print $1'} );
+		TOTAL=$(grep -w $i ${ResultsLocation}/$FileName | awk '{len=$3-$2;sum += len}END{print sum}' )
+		AVG=$(($TOTAL/$TYPE))
+		echo $NAME $'\t'$TYPE $'\t'$TOTAL$'\t'$AVG >> ${ResultsLocation}/Super.Summary.${ID};
+done
+
+rm ${ResultsLocation}/SpeciesList.${ID}
+rm ${ResultsLocation}/SuperList.${ID}
+rm ${ResultsLocation}/SpeciesUni.${ID}
+rm ${ResultsLocation}/SuperUni.${ID}
 
 echo "Executing merging of overlapping features..."
 
@@ -54,7 +83,7 @@ FileName=${FileName}."Merged".${ID}
 
 echo "Merging done."
 echo "WARNING:"
-echo "Creating a concatenated Genome File will require an installation of Bedtools."
+echo "Creating a concatenated Genome File will require a version of Bedtools."
 
 bedtools getfasta -fi ${GenomeLocation} -bed ${ResultsLocation}/$FileName > ${ResultsLocation}/ConcatGenome.Raw.${ID}
 
