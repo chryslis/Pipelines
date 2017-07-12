@@ -24,7 +24,7 @@ while (<READ>) {
 my $RepTrack = $ARGV[0];
 
 open(READ2,$RepTrack) || die "Could not open second file $RepTrack! $!";
-my $outPut = "RepeatMaskerTrack.Sorted.Cleaned";
+my $outPut = "RepeatMaskerTrack.Sorted.Cleaned.July17";
 open(OUT,">",$outPut) || die "Could not create file! $!";
 my $counter = 0;
 

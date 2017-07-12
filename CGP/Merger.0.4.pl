@@ -21,7 +21,8 @@ if($JobIDFile =~ /([0-9]+)/g){
 print "JobID: $JobIDFile\n";
 
 my @outNameNew = split(/\./,$outName);
-$outName = $outNameNew[0].".".$outNameNew[1].".".$outNameNew[2];
+my $len=scalar(@outNameNew);
+$outName = join(".",@outNameNew[0..$len-2]);
 my $outFile =  $outName.".Merged.".$JobIDFile;
 my $dir = cwd();
 my $path = $dir."/"."results.".$JobIDFile."/";

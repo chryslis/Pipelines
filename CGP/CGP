@@ -55,8 +55,6 @@ for i in $(cat ${ResultsLocation}/SpeciesUni.${ID});
 		echo $NAME $'\t'$TYPE $'\t'$TOTAL$'\t'$AVG >> ${ResultsLocation}/Species.Summary.${ID};
 done
 
-exit
-
 for i in $(cat ${ResultsLocation}/SuperUni.${ID});  
 	do 
 		NAME="$i"; 
@@ -79,7 +77,10 @@ MERGER=${PWD}/Merger.0.4.pl
 $MERGER ${ResultsLocation}/$FileName
 
 FileName=$(basename ${RepTrack} "$1")
-FileName=${FileName}."Merged".${ID}
+
+echo "Name: $FileName"
+
+FileName=${FileName}."Indexed.Merged".${ID}
 
 echo "Merging done."
 echo "WARNING:"

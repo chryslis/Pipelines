@@ -3,9 +3,13 @@
 echo "Path to RepeatMaskerTrack"
 read RepTrack
 
+
+sed -i '1d' $RepTrack
+
 echo "Sorting..."
 sort -k6,6 -k7,7n ${RepTrack} -o ${RepTrack}
 
+#Default is less then 100 occurences
 echo "Enter Exclusion Threshold"
 read Limit
 
@@ -21,12 +25,12 @@ do
 	echo $NAME $'\t'$TYPE >> Summary		
 done
 
-rm SpeciesList
-rm SpeciesUni
+#rm SpeciesList
+#rm SpeciesUni
 
 awk -v var="$Limit" '$2 > var {print}' Summary > Summary.${Limit}
 
-rm Summary
+#rm Summary
 
 cut -f1 Summary.${Limit} > List
 sort -u List -o List
@@ -35,6 +39,6 @@ PROCESSING=${PWD}/ProcessingSub.pl
 
 $PROCESSING $RepTrack $Total
 
-rm List
+#rm List
 echo "Done! Procced to CGP! "
 

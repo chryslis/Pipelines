@@ -32,7 +32,6 @@ foreach my $folders (@Alignments){
 	opendir (ANALYSIS, $tempPath) || die "Could not read folder $!";
 
 	while (readdir ANALYSIS) {
-		#This still needs correction because fdr is not yet implemented
 		if ($_ =~ m/\.Analysis\.Adjusted/g) {
 
 			$tempPath = $AlignmentLocations.$folders."/".$_;

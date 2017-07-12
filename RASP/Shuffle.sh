@@ -1,14 +1,15 @@
 #!/bin/bash
 
-#echo "Specify path to Conncatenated Genome."
+echo "Specify path to Conncatenated Genome."
 #read ConcGenome
 ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/ConcatenatedGenome.22517
 #echo "Preparing Shuffle..."
 outDir=$(dirname "${ConcGenome}")
-#echo "What Mark is getting aligned?"
+jobID=$(basename ${ConcGenome} | tr -dc 0-9)
+echo "What Mark is getting aligned?"
 #read Mark
 Mark=H3K4me1
-#echo "What sorting was used?[F/S]"
+echo "What sorting was used?[F/S]"
 #read sortType
 sortType=S
 sorting=$(echo "${sortType^^}") 
@@ -33,7 +34,7 @@ fi
 
 ENRICHMENT=${PWD}/ReadEnrichment.pl
 REVERT=${PWD}/IDReverte.pl
-OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed.*
+OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.*.Indexed.${JobID}
 VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
 

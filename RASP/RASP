@@ -1,21 +1,22 @@
 #!/bin/bash
 
-#echo "Specify path to reads."
+echo "Specify path to reads."
 #read Reads
-Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667626.H3K4me1/SRR097967.trimmed.cleaned.fastq
+Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM605310.H3K36me3/SRR067945.clean.fastq
 
-#echo "Specify path to Conncatenated Genome."
+echo "Specify path to Conncatenated Genome."
 #read ConcGenome
-ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/ConcatenatedGenome.22517
-
+ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.2272017/ConcatenatedGenome.2272017
 echo "What Mark is getting aligned?"
 #read Mark=H9H3K27acBQ
-Mark=H3K4me1
+Mark=H3K36me3
 
 echo "Creating outoutfolder..."
 outDir=$(dirname "${ConcGenome}")
 mkdir "$outDir/Alignments.$Mark"
 echo "Results will be placed at $outDir/Alignments.$Mark"
+jobID=$(basename ${ConcGenome} | tr -dc 0-9)
+echo "JobID is $jobID."
 
 echo "Do you want to sort by Species[S] or SuperFamily[F]?"
 read sortType
@@ -38,34 +39,39 @@ fi
 
 
 echo "Starting up bwa..."
+
 echo "Is the Genome indexed ?[y/n]"
 read check
-checking=$(echo "${check^^}") 
+checking=$(echo "${check^^}")
 
-echo "The pipeline can now run unattended all settings been choosen."
-if [[ "$checking"=="Y"  ]]; then
+if [[ "$checking" == "Y" ]]
+then
 	echo "Skipping indexing process..."
-else
+
+elif [[ "$checking" == "N" ]]
+then
 	echo "Starting indexing process..."
 	bwa index $ConcGenome
 fi
 
-# echo "Starting alignment..."
-# bwa mem -a -t 3 -v 3 $ConcGenome $Reads > $outDir/Alignments.$Mark/$Mark.sam
+echo "The pipeline can now run unattended all settings been choosen."
 
-# echo "Aligment done..."
-# echo "Doing some converting..."
+echo "Starting alignment..."
+bwa mem -a -t 3 -v 3 $ConcGenome $Reads > $outDir/Alignments.$Mark/$Mark.sam
 
-# samtools view -Sb $outDir/Alignments.$Mark/$Mark.sam -o $outDir/Alignments.$Mark/$Mark.bam
-# echo "Removing sam and sorting *.bam"
+echo "Aligment done..."
+echo "Doing some converting..."
 
-# rm $outDir/Alignments.$Mark/$Mark.sam
+samtools view -Sb $outDir/Alignments.$Mark/$Mark.sam -o $outDir/Alignments.$Mark/$Mark.bam
+echo "Removing sam and sorting *.bam"
 
-# samtools sort $outDir/Alignments.$Mark/$Mark.bam > $outDir/Alignments.$Mark/$Mark.sorted.bam
-# rm $outDir/Alignments.$Mark/$Mark.bam
+rm $outDir/Alignments.$Mark/$Mark.sam
 
-# echo "Indexing *.bam"
-# samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
+samtools sort $outDir/Alignments.$Mark/$Mark.bam > $outDir/Alignments.$Mark/$Mark.sorted.bam
+rm $outDir/Alignments.$Mark/$Mark.bam
+
+echo "Indexing *.bam"
+samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
 
 PipeLoc=$PWD
 CONSTRUCTOR=${PWD}/GenomeConstructor.pl
@@ -73,31 +79,31 @@ CONSTRUCTOR=${PWD}/GenomeConstructor.pl
 Index=$outDir/MergeIndex.*.bed
 
 echo "Creating a Genome File."
-#$CONSTRUCTOR ${ConcGenome} $outDir
+$CONSTRUCTOR ${ConcGenome} $outDir
 
-#sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
+sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
 
-# echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
-# bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
+echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
+bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
 
 
-# echo "Calculating coverage..."
-# bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam   > $outDir/Alignments.$Mark/$Mark.Coverage.bed
+echo "Calculating coverage..."
+bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam   > $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-# echo "Creating annotation..."
-# bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed | cut -f1,2,3,4,16,17 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.bed
+echo "Creating annotation..."
+bedtools intersect -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed | cut -f1,2,3,4,16,17 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' > $outDir/Alignments.$Mark/$Mark.Annotation.bed
 
 CONCAT=${PWD}/PostConcat.pl
-#$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
+$CONCAT $outDir/Alignments.$Mark/$Mark.Annotation.bed  $outDir/Alignments.$Mark/$Mark.Coverage.bed $Mark > $outDir/Alignments.$Mark/$Mark.Filtered.bed
 #rm $outDir/Alignments.$Mark/$Mark.Annotation.bed
 #rm $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
 echo "Constructing weighted vector..."
 COUNT=${PWD}/WeightVector.pl
-#$COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
+$COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
 VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
-OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.Indexed*
+OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.*.Indexed.${JobID}
 
 echo "Counting features..."
 echo "Reverting IDs to feature annotation and calculating enrichment..."
@@ -105,7 +111,7 @@ echo "Reverting IDs to feature annotation and calculating enrichment..."
 REVERT=${PWD}/IDReverte.pl
 ENRICHMENT=${PWD}/ReadEnrichment.pl
 
-#$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Filtered.bed $sorting $VECTOR $LIST
+$REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Filtered.bed $sorting $VECTOR $LIST
 
 cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.ReadList
 cut -f2 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.IDList
