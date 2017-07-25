@@ -78,9 +78,10 @@ for (( i = 2; i < 2; i++ )); do
 
 done
 
-SIGNIF=${PWD}/SignifSub.pl;
-$SIGNIF $outDir/Alignments.$Mark/$Mark.Enrichment$SELECTION.Result
+### This only if loop is used for all shufs###
+# SIGNIF=${PWD}/SignifSub.pl;
+# $SIGNIF $outDir/Alignments.$Mark/$Mark.Enrichment$SELECTION.Result
 
-FDR=${PWD}/FDR.R 
+# FDR=${PWD}/FDR.R 
 
-Rscript --vanilla $FDR $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis.Adjusted
+# Rscript --vanilla $FDR $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis $outDir/Alignments.$Mark/$Mark.Enrichment"${SELECTION}".Analysis.Adjusted

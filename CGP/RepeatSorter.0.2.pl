@@ -8,7 +8,6 @@ use File::Basename;
 
 #requieres input to be sorted by chromosome and length
 #use sort -k1,1 -k2,2n for bed files
-#OldName: artificalGenome0.2.pl
 
 my $start = time();
 my $file = $ARGV[0];
@@ -60,7 +59,7 @@ while (<READ>) {
 	}elsif($temp[5] =~ /chrM/g ) {
 		next;
 	}else{
-		#Generating intermediate file for storage of sequences.
+		#Generating  file for storage of sequences.
 		my $localTemp = $temp[5]."\t".$temp[6]."\t".$temp[7]."\t".$temp[10]."\t".$temp[11]."\t".$temp[12]."\t"."ID:$idNum";
 		print OUTBED "$localTemp\n";
 		$idNum++;

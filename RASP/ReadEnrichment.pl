@@ -65,13 +65,13 @@ my $path = $temp1[0];
 my $outPut = $path;
 my @temp2 = split(/\./,$fileName);
 
-my $name = "Enrichment".$selection.".Result";
+my $name = ".Enrichment".$selection.".Result";
 my $outName = $temp2[0].$name;
 my $outPutPath = $path.$outName;
 
 
 
-print "\tProcessing Features and Reads...\n";
+print "\tProcessing features and reads...\n";
 
 #Hash for Couting / Saving the weighted features
 my %CountingHash;
@@ -119,5 +119,5 @@ my $stop = time();
 my $runTime = int((($stop - $start)/60));
 
 print "\n";
-print "\tDone!\t Finished in $runTime Minutes.\n";
+print "\tDone!\tFinished in $runTime Minutes.\n";
 
