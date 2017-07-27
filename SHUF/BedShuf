@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#Shuffle enrichment script is NOT interchangable with AlignmentPipe Enrichment
+ENRICHMENT="/home/chrys/Documents/thesis/data/Pipelines/SHUF/ShuffleEnrichment.pl"
+#Path to dummy bed
+DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2BK15ac/H2BK15ac.Dummy.bed"
+#Path to hg19GenomeFile
+GENOMEFILE="/media/chrys/HDDUbutuMain/Concat.2272017/hg19GenomeFile"
+#Mark
+Mark=$1
+#SpeciesList
+LIST="/media/chrys/HDDUbutuMain/Concat.2272017/Species.Summary.2272017";
+#Path to ShuffleTrack -> RepeatMaskerTrack with chr1 start stop family/species 
+#cut -f1,2,3,4 RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.2272017 > ShuffleTrack
+SHUFFLETRACK="/media/chrys/HDDUbutuMain/Concat.2272017/ShuffleTrack"
+
+mkdir Shuffle.$Mark
+
+
+for (( i = 3; i < 5; i++ )); do
+	#statements
+
+	seed=$((1+ RANDOM %1000))
+	echo -e $i $seed >> Shuffle.$Mark/SeedList.$Mark
+
+	#bedtools shuffle -i $DUMMYBED -g $GENOMEFILE > $Mark.Shuffle/$Mark.Shuffled
+	SHUFFLEDBED=$(bedtools shuffle -i $DUMMYBED -g $GENOMEFILE)
+
+	bedtools intersect -seed $seed -wo -f 0.60 -a $SHUFFLEDBED -b $SHUFFLETRACK |
+	cut -f4,8 | awk '{var=$1; split($1,a,".");$1 =a[2];print}' | $ENRICHMENT $LIST > Shuffle.$Mark/$Mark.Shuffle."${i}"
+
+done
+
+
+

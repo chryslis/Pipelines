@@ -2,13 +2,13 @@
 
 echo "Specify path to Conncatenated Genome."
 #read ConcGenome
-ConcGenome=/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/ConcatenatedGenome.22517
+ConcGenome=/media/chrys/HDDUbutuMain/Concat.2272017/ConcatenatedGenome.2272017
 #echo "Preparing Shuffle..."
 outDir=$(dirname "${ConcGenome}")
 jobID=$(basename ${ConcGenome} | tr -dc 0-9)
 echo "What Mark is getting aligned?"
 #read Mark
-Mark=H3K4me1
+Mark=H2BK15ac
 echo "What sorting was used?[F/S]"
 #read sortType
 sortType=S
@@ -34,13 +34,13 @@ fi
 
 ENRICHMENT=${PWD}/ReadEnrichment.pl
 REVERT=${PWD}/IDReverte.pl
-OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.*.Indexed.${JobID}
+OriginalIndex=$outDir/RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.2272017
 VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
 
 mkdir $outDir/Alignments.$Mark/Shuffle.$Mark
 
-for (( i = 2; i < 2; i++ )); do
+for (( i = 4; i < 5; i++ )); do
 
 	echo "Executing shuffle: ${i}"
 
@@ -61,7 +61,7 @@ for (( i = 2; i < 2; i++ )); do
 	cat $outDir/Alignments.$Mark/Shuffle.$Mark/Temp/*.shuf > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffledReads."${i}"
 
 	#Combing reads and the IDs
-	paste $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffledReads."${i}" $outDir/Alignments.$Mark/$Mark.IDList > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}"
+	paste $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffledReads."${i}" $outDir/Alignments.$Mark/$Mark.IDList > $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark"-${i}".Shuffle
 
 	#Removing intermediate files
 	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.ShuffledReads."${i}"
@@ -72,8 +72,8 @@ for (( i = 2; i < 2; i++ )); do
 	echo "	Reverting IDs to features for shuffle..."
 
 	#Final steps for processing.
-	$REVERT $OriginalIndex $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" | $ENRICHMENT $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}" $sorting $VECTOR $LIST
-	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${i}"
+	$REVERT $OriginalIndex $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark"-${i}".Shuffle | $ENRICHMENT $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark"-${i}".Shuffle $sorting $VECTOR $LIST
+	rm $outDir/Alignments.$Mark/Shuffle.$Mark/$Mark"-${i}".Shuffle
 
 
 done

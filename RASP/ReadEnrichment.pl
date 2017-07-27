@@ -58,7 +58,6 @@ while (<GETWEIGHTS>) {
 close(GETWEIGHTS);
 
 #Processing stuff to put everything in the proper folders
-
 my $fileName = basename($input);
 my @temp1 = split(/$fileName/,$input);
 my $path = $temp1[0];
