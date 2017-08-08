@@ -29,6 +29,7 @@ my $shuffleFolder = $path.$shuffLoc;
 my %EnrichResultsHash;
 #Information like occurence of feature, cummulative length of the feature and mean feature length go here.
 my %SupplementaryHash;
+my $supplLen;
 
 open(RESULT,$results) || die "Could not open results $results:$!";
 
@@ -37,6 +38,7 @@ while(<RESULT>){
 	chomp;
 	my @temp = split("\t");
 	my $len = $#temp;
+	$supplLen = $len;
 
 	$EnrichResultsHash{$temp[0]} = $temp[1];
 	$SupplementaryHash{$temp[0]} = join("\t",@temp[2..$len]);
@@ -59,7 +61,7 @@ while (readdir SHUFFLE) {
 close(SHUFFLE);
 
 #Number of permutations done
-my $permNum = scalar( @Shuffles);
+my $permNum = scalar( @Shuffles );
 
 #Hash for capturing shuffle results
 my %ShuffResHash;
@@ -93,18 +95,29 @@ my %SumHash;
 #Calculation of pValue and a general sum for how many reads there were.
 foreach my $shuffs(sort keys %ShuffResHash){
 
+	#print "NUMBER IS HERE: $shuffs\n";
+	
+
 	foreach my $shuffedfeatures (keys %{$ShuffResHash{$shuffs}}){
 
 		#If the amount of mapped reads per shuffle was larger then enrichment +1
-		if ( ${ShuffResHash{$shuffs}{$shuffedfeatures}} > $EnrichResultsHash{$shuffedfeatures}) {
 
-			$reportHash{$shuffedfeatures} += 1;
+		if (exists  $EnrichResultsHash{$shuffedfeatures} ) {
+	
+			if ( ${ShuffResHash{$shuffs}{$shuffedfeatures}} > $EnrichResultsHash{$shuffedfeatures}) {
 
+				$reportHash{$shuffedfeatures} += 1;
 
-		}else{
-		#If not, nothing but a 0 gets added because one likes to avoid empty hash keys
+			}else{
+			#If not, nothing but a 0 gets added because one likes to avoid empty hash keys
 			$reportHash{$shuffedfeatures} += 0; 
+			}
+			
+		}else{
+
+			$reportHash{$shuffedfeatures} += 0;
 		}
+
 
 		#Calculates a sum over all reads per feature to calculate how many reads were shuffled on average
 		$SumHash{$shuffedfeatures} += ${ShuffResHash{$shuffs}{$shuffedfeatures}}
@@ -123,6 +136,7 @@ for my $keys(keys %SumHash){
 }
 
 my $outPath = $path."/".$mark.".$decomp[1].Analysis";
+my $supInformation;
 
 open(OUT,">",$outPath) || die "Could not create $outPath: $!";
 
@@ -130,8 +144,25 @@ print OUT "FeatureName\tReadCount\tpValue\tFeatureOccurence\tCummulativeLength\t
 
 foreach my $keys(sort keys %reportHash){
 
-	print OUT "$keys\t$EnrichResultsHash{$keys}\t$reportHash{$keys}\t$SupplementaryHash{$keys}\t$SumHash{$keys}\n";
+	if (exists $SupplementaryHash{$keys}){
+
+		$supInformation = $SupplementaryHash{$keys};
+
+	}else{
+
+		my $num = $supplLen-1;
+
+		$supInformation = "NA\t" x $num;
+		$EnrichResultsHash{$keys} = 0;
+		$reportHash{$keys} = 1;
+
+	}
+
+	
+	print OUT "$keys\t$EnrichResultsHash{$keys}\t$reportHash{$keys}\t$supInformation\t$SumHash{$keys}\n";
 
 }
 
 print "Number of Shuffles was: $permNum \n";
+
+

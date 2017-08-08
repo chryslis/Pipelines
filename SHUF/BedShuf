@@ -1,9 +1,8 @@
 #!/bin/bash
 
 #Shuffle enrichment script is NOT interchangable with AlignmentPipe Enrichment
-ENRICHMENT="/home/chrys/Documents/thesis/data/Pipelines/SHUF/ShuffleEnrichment.pl"
-#Path to dummy bed
-DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2BK15ac/H2BK15ac.Dummy.bed"
+ENRICHMENT="/home/chrys/Documents/thesis/data/Pipelines/SHUF/ShuffleEnrichmentUpdated.pl"
+
 #Path to hg19GenomeFile
 GENOMEFILE="/media/chrys/HDDUbutuMain/Concat.2272017/hg19GenomeFile"
 #Mark
@@ -14,20 +13,27 @@ LIST="/media/chrys/HDDUbutuMain/Concat.2272017/Species.Summary.2272017";
 #cut -f1,2,3,4 RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.2272017 > ShuffleTrack
 SHUFFLETRACK="/media/chrys/HDDUbutuMain/Concat.2272017/ShuffleTrack"
 
-mkdir Shuffle.$Mark
+mkdir /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark
+
+DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/$Mark.Dummy.bed"
+#DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2AK5ac/H2AK5ac.5Dummy.test.bed"
 
 
-for (( i = 3; i < 5; i++ )); do
+for (( i = 1; i < 10; i++ )); do
 	#statements
+	seed=$((1+ RANDOM %30000))
+	
+	echo "Seed is: $seed"
 
-	seed=$((1+ RANDOM %1000))
-	echo -e $i $seed >> Shuffle.$Mark/SeedList.$Mark
+	#bedtools shuffle -i $DUMMYBED -g $GENOMEFILE > Shuffle.$Mark/$Mark.Shuffled
+	bedtools shuffle -seed $seed -i $DUMMYBED -g $GENOMEFILE > /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}"
+	#SHUFFLEBED="$(bedtools shuffle -seed $seed -i $DUMMYBED -g $GENOMEFILE; echo x)"
+	#SHUFFLEBED="${SHUFFLEBED%x}"
 
-	#bedtools shuffle -i $DUMMYBED -g $GENOMEFILE > $Mark.Shuffle/$Mark.Shuffled
-	SHUFFLEDBED=$(bedtools shuffle -i $DUMMYBED -g $GENOMEFILE)
+	bedtools intersect -wo -f 0.60 -a /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}" -b $SHUFFLETRACK |
+	cut -f4,8 | awk '{var=$1; split($1,a,".");$1 =a[2];print}' | $ENRICHMENT $LIST > /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${seed}"
 
-	bedtools intersect -seed $seed -wo -f 0.60 -a $SHUFFLEDBED -b $SHUFFLETRACK |
-	cut -f4,8 | awk '{var=$1; split($1,a,".");$1 =a[2];print}' | $ENRICHMENT $LIST > Shuffle.$Mark/$Mark.Shuffle."${i}"
+	rm /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}"
 
 done
 

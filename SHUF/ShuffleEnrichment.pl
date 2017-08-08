@@ -41,13 +41,16 @@ while (<READ2>) {
 
 foreach my $keys (sort keys %BackupData){
 
-	if (exists $countingHash{$keys}) {
+	my $key = $keys;
+	$key =~ s/\s+//g;
 
-		print "$keys\t$countingHash{$keys}\t$BackupData{$keys}\n";
+	if (exists $countingHash{$key}) {
 
+		print "$key\t$countingHash{$key}\t$BackupData{$keys}\n";
+		
 	}else{
 
-		print "$keys\t0\t$BackupData{$keys}\n";
+		print "$key\t0\t$BackupData{$keys}\n";
 
 	}
 
