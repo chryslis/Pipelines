@@ -6,9 +6,9 @@ use List::MoreUtils qw(uniq);
 use Data::Dumper qw(Dumper);
 
 #FastqFile
-my $InPut = "/media/chrys/HDDUbuntu/H9CellLine/Aligned/GSM896161.H3K14ac/SRR445375.clean.fastq";
+my $InPut = "/media/chrys/HDDUbutuMain/H9CellLine/Aligned/GSM667636.H4K5ac/SRR179751.clean.fastq";
 #Output Location
-my $outPut = "/media/chrys/HDDUbuntu/H9CellLine/Aligned/GSM896161.H3K14ac/H2BK120ac.Dummy.bed";
+my $outPut = "/media/chrys/HDDUbutuMain/H9CellLine/Aligned/GSM667636.H4K5ac/H4K5ac.Dummy.bed";
 
 open(READ,$InPut) || die "Could not open $InPut! $!";
 open(OUT,">",$outPut) || die "Could not open $outPut! $!";

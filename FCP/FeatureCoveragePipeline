@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+#Location Ancor:
+ConcGenome=/media/chrys/HDDUbutuMain/Concat.2272017/ConcatenatedGenome.2272017
+outDir=$(dirname "${ConcGenome}")
+
+PipeLoc=$PWD
+
+#Select Species
+Species = $1;
+
+grep -w $Species  $outDir/RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.2272017 > $outDir/$Species.OriginalPositions
+
+./QuickCompare3.pl $outDir/$Species.OriginalPositions $outDir/RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.Merged.2272017 > $Species.MergeTrack
+
+#Give a list of marks you want to analyze
+MarkList=$2;
+
+for i in $(cat $MarkList); do
+
+	time bedtools intersect -wo -abam $outDir/Alignments.$i/$i.sorted.bam -b $outDir/$Species.MergeTrack -bed |
+	cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  $outDir/Alignments.$i/$Species.Alignment
+
+	$COVERAGE $outDir/$Species.OriginalPositions $outDir/Alignments.$i/$i.ReadWeightVector $outDir/Alignments.$i/$i.$Species.Alignment > $outDir/Alignments.$i/$i.$Species.Coverage ;done
+
+done
+
+
+#2.	Use QuickCompare3 to construct a subset from the questioned species
+
+ ../$Species.OriginalPositions ../RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.Merged.2272017 > MER11C.NewMergeTrack
+
+#3. Use BedtoolsIntersect to find alignment subset
+time bedtools intersect -wo -abam H2BK12ac.sorted.bam -b MER11C.NewMergeTrack -bed |  cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  MER11C.Alignments
+
+# 
+
+#4. Calculate Enrichment 

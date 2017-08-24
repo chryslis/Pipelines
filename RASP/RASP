@@ -2,27 +2,9 @@
 
 echo "Specify path to reads."
 #read Reads
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM605310.H3K36me3/SRR067945.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM605314.H3K4me2/SRR067949.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM605316.H3K4me3/SRR067951.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM605324.H3K9ac/SRR067959.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667608.H2AK5ac/SRR097962.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667612.H2BK5ac/SRR097964.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667621.H3K23me2/SRR179733.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM665037.H3K27ac/SRR179705.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667626.H3K4me1/SRR097967.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667622.H3K27me3/SRR097966.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667629.H3K79me1/SRR179745.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM896161.H3K14ac/SRR445375.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667630.H3K79me2/SRR097969.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM706062.H2BK15ac/SRR179680.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667620.H3K23ac/SRR179731.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM706076.H3K56ac/SRR179694.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM706064.H3K18ac/SRR179682.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667611.H2BK12ac/SRR097963.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM752963.H2BK20ac/SRR304997.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM752962.H2BK120ac/SRR304996.clean.fastq
-#Reads=/media/chrys/HDDUbuntu/H9CellLine/GSM667625.H3K4ac/SRR179740.clean.fastq
+
+###EXAMPLE###
+Reads=/media/chrys/HDDUbutuMain/H9CellLine/GSM667640.H4K91ac/SRR179763.clean.fastq
 
 echo "Specify path to Conncatenated Genome."
 #read ConcGenome
@@ -33,7 +15,7 @@ echo "Specify path to Index file (RepeatMaskerTrack.Indexed)."
 
 echo "Specify epigenetic mark."
 #read Mark
-Mark=H3K4ac
+Mark=H4K91ac
 
 echo "Creating outoutfolder..."
 outDir=$(dirname "${ConcGenome}")
@@ -83,49 +65,49 @@ then
 	bwa index $ConcGenome
 fi
 
-echo "The pipeline can now run unattended all settings been choosen."
+# echo "The pipeline can now run unattended all settings been choosen."
 
-echo "Starting alignment..."
-time bwa mem -a -t 3 -v 3 $ConcGenome $Reads | samtools view -Sb -o $outDir/Alignments.$Mark/$Mark.bam
+# echo "Starting alignment..."
+# time bwa mem -a -t 3 -v 3 $ConcGenome $Reads | samtools view -Sb -o $outDir/Alignments.$Mark/$Mark.bam
 
-echo "Aligment done..."
+# echo "Aligment done..."
 
-echo "Doing some converting..."
-time samtools sort -@3 $outDir/Alignments.$Mark/$Mark.bam -o $outDir/Alignments.$Mark/$Mark.sorted.bam
+# echo "Doing some converting..."
+# time samtools sort -@3 $outDir/Alignments.$Mark/$Mark.bam -o $outDir/Alignments.$Mark/$Mark.sorted.bam
 
-echo "Removing unsorted *.bam"
-rm $outDir/Alignments.$Mark/$Mark.bam
+# echo "Removing unsorted *.bam"
+# rm $outDir/Alignments.$Mark/$Mark.bam
 
-echo "Indexing *.bam"
-time samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
+# echo "Indexing *.bam"
+# time samtools index $outDir/Alignments.$Mark/$Mark.sorted.bam
 
 PipeLoc=$PWD
 CONSTRUCTOR=${PWD}/GenomeConstructor.pl
 
 Index=$outDir/MergeIndex.*.bed
 
-echo "Creating a Genome File."
-time $CONSTRUCTOR ${ConcGenome} $outDir
+# echo "Creating a Genome File."
+# time $CONSTRUCTOR ${ConcGenome} $outDir
 
-sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
+# sort -V -k1,1 $outDir/names.txt -o $outDir/names.txt
 
-echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
-time bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
+# echo "Resorting the index file to match bam (Can be undone by sort -k1,1 -k2,2n)"
+# time bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/ResortMergeIndex
 
-echo "Calculating coverage..."
-time bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam  > $outDir/Alignments.$Mark/$Mark.Coverage.bed
+# echo "Calculating coverage..."
+# time bedtools coverage -sorted -g $outDir/names.txt -a $outDir/ResortMergeIndex -b $outDir/Alignments.$Mark/$Mark.sorted.bam  > $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-echo "Creating annotation..."
-CONCAT=${PWD}/PostConcat.pl
-time bedtools intersect -sorted -g $outDir/names.txt -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed |
-cut -f1,2,3,4,16 |
-awk '{var=$4; split($4,a,".");$4 =a[2];print}' |
-$CONCAT $outDir/Alignments.$Mark/$Mark.Coverage.bed > $outDir/Alignments.$Mark/$Mark.Filtered.bed  
-#rm $outDir/Alignments.$Mark/$Mark.Coverage.bed
+# echo "Creating annotation..."
+# CONCAT=${PWD}/PostConcat.pl
+# time bedtools intersect -sorted -g $outDir/names.txt -wo -abam $outDir/Alignments.$Mark/$Mark.sorted.bam  -b $outDir/ResortMergeIndex -bed |
+# cut -f1,2,3,4,16 |
+# awk '{var=$4; split($4,a,".");$4 =a[2];print}' | 
+# $CONCAT $outDir/Alignments.$Mark/$Mark.Coverage.bed > $outDir/Alignments.$Mark/$Mark.Filtered.bed 
+# rm $outDir/Alignments.$Mark/$Mark.Coverage.bed
 
-echo "Constructing weighted vector..."
-COUNT=${PWD}/WeightVector.pl
-time $COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
+# echo "Constructing weighted vector..."
+# COUNT=${PWD}/WeightVector.pl
+# time $COUNT $outDir/Alignments.$Mark/$Mark.Filtered.bed  > $outDir/Alignments.$Mark/$Mark.ReadWeightVector
 VECTOR=$outDir/Alignments.$Mark/$Mark.ReadWeightVector
 
 
@@ -135,9 +117,8 @@ ENRICHMENT=${PWD}/ReadEnrichment.pl
 
 time $REVERT $OriginalIndex $outDir/Alignments.$Mark/$Mark.Filtered.bed | $ENRICHMENT $outDir/Alignments.$Mark/$Mark.Filtered.bed $sorting $VECTOR $LIST
 
-cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.ReadList
-cut -f2 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.IDList
+#cut -f1 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.ReadList
+#cut -f2 $outDir/Alignments.$Mark/$Mark.Filtered.bed > $outDir/Alignments.$Mark/$Mark.IDList
+#rm $outDir/Alignments.$Mark/$Mark.Filtered.bed 
 
 echo "Done!"
-#rm $outDir/Alignments.$Mark/$Mark.Filtered.bed 
-#rm $outDir/Alignments.$Mark/$Mark.*.bam*

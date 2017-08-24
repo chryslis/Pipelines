@@ -7,7 +7,7 @@ use List::MoreUtils qw(uniq);
 
 #Input requires the location of 
 #my $AlignmentLocations = $ARGV[0];
-my $AlignmentLocations = "/home/chrys/Documents/thesis/data/analysis/ConcatenatedGenome/Concat.22517/";
+my $AlignmentLocations = "/media/chrys/HDDUbutuMain/Concat.2272017/";
 
 opendir(RESULTS,$AlignmentLocations) || die "Could not read folder $!";
 
@@ -22,7 +22,7 @@ while (readdir RESULTS) {
 		
 	}
 }
-#Checking fo
+#Checking for Marks
 my @AllMarks;
 
 foreach my $folders (@Alignments){
@@ -46,8 +46,14 @@ foreach my $folders (@Alignments){
 #StashHash for Marks -> Families -> Binary
 my %ResultsHash;
 
-#Just temp;
+###############################
+#    THRESHOLDS ARE here      #
+###############################
+
+
 my $signif = 0.05;
+my $signifFold = 2.0;
+
 
 my @Features;
 my @Marks;
@@ -73,10 +79,15 @@ foreach my $AnalysisFiles(@AllMarks){
 		my $feature = $temp[0];
 		push(@Features,$feature);
 		my $pVal = $temp[3];
+		my $FoldChange = $temp[4];
 		my $bin;
-		if ($pVal < $signif) {
+
+		if ($pVal < $signif && $FoldChange > $signifFold) {
+
 			$bin = 1;
+
 		}else{
+			
 			$bin = 0;
 		}
 
@@ -97,16 +108,18 @@ my $ID = $1;
 
 
 
-open(OUTPUT,">$AlignmentLocations/EnrichmentMatrix.$ID");
+open(OUTPUT,">$AlignmentLocations/EnrichmentMatrix.Control.$ID");
 
 my $header = join("\t",@uniqFeatures);
 print OUTPUT "\t$header";
 print  OUTPUT "\n";
 
+open(OUTFEATURE,">$AlignmentLocations/FeatureList.$ID") || die "Could not open, $!";
+print OUTFEATURE "$header";
 
 
 
-sub csv {
+sub tabdel {
 
 
 foreach my $marks(@uniqMarks){
@@ -118,21 +131,19 @@ foreach my $marks(@uniqMarks){
 		if (exists $ResultsHash{$marks}{$feature}) {
 
 			print OUTPUT "\t$ResultsHash{$marks}{$feature}"; 
-			
-		}else{
-
-			print OUTPUT "\t"
-
+			#print "Value: $ResultsHash{$marks}{$feature}\t"
 		}
 	}
-
 	print OUTPUT "\n";
 }
 
 }
 
-csv();
+tabdel();
 
 
+
+
+#print Dumper \%ResultsHash;
 
 

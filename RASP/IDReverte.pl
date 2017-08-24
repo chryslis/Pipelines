@@ -8,7 +8,7 @@ my $start = time();
 my $current = 0;
 
 #Get original Index file from output of the Sorting (a.G.0.2)Script 
-#my $originalIndex = $ARGV[0];
+
 my $originalIndex = $ARGV[0];
 
 open(READ,$originalIndex) || die "Could not open $originalIndex!: $!";

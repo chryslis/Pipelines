@@ -6,7 +6,7 @@ ENRICHMENT="/home/chrys/Documents/thesis/data/Pipelines/SHUF/ShuffleEnrichmentUp
 #Path to hg19GenomeFile
 GENOMEFILE="/media/chrys/HDDUbutuMain/Concat.2272017/hg19GenomeFile"
 #Mark
-Mark=$1
+Mark=H4K91ac
 #SpeciesList
 LIST="/media/chrys/HDDUbutuMain/Concat.2272017/Species.Summary.2272017";
 #Path to ShuffleTrack -> RepeatMaskerTrack with chr1 start stop family/species 
@@ -15,7 +15,7 @@ SHUFFLETRACK="/media/chrys/HDDUbutuMain/Concat.2272017/ShuffleTrack"
 
 mkdir /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark
 
-DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/$Mark.Dummy.bed"
+DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H4K91ac/H4K91ac.Dummy.bed"
 #DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2AK5ac/H2AK5ac.5Dummy.test.bed"
 
 
