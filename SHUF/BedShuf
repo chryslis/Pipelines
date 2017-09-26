@@ -6,7 +6,7 @@ ENRICHMENT="/home/chrys/Documents/thesis/data/Pipelines/SHUF/ShuffleEnrichmentUp
 #Path to hg19GenomeFile
 GENOMEFILE="/media/chrys/HDDUbutuMain/Concat.2272017/hg19GenomeFile"
 #Mark
-Mark=H4K91ac
+Mark=$1
 #SpeciesList
 LIST="/media/chrys/HDDUbutuMain/Concat.2272017/Species.Summary.2272017";
 #Path to ShuffleTrack -> RepeatMaskerTrack with chr1 start stop family/species 
@@ -19,7 +19,7 @@ DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H4K91ac/H4K91ac.Du
 #DUMMYBED="/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2AK5ac/H2AK5ac.5Dummy.test.bed"
 
 
-for (( i = 1; i < 10; i++ )); do
+for (( i = 1; i < 2; i++ )); do
 	#statements
 	seed=$((1+ RANDOM %30000))
 	
@@ -30,10 +30,10 @@ for (( i = 1; i < 10; i++ )); do
 	#SHUFFLEBED="$(bedtools shuffle -seed $seed -i $DUMMYBED -g $GENOMEFILE; echo x)"
 	#SHUFFLEBED="${SHUFFLEBED%x}"
 
-	bedtools intersect -wo -f 0.60 -a /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}" -b $SHUFFLETRACK |
+	bedtools intersect -wo -a /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}" -b $SHUFFLETRACK |
 	cut -f4,8 | awk '{var=$1; split($1,a,".");$1 =a[2];print}' | $ENRICHMENT $LIST > /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffle."${seed}"
 
-	rm /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}"
+	#rm /media/chrys/HDDUbutuMain/Concat.2272017/Alignments.$Mark/Shuffle.$Mark/$Mark.Shuffled."${seed}"
 
 done
 

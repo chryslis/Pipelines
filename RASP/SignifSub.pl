@@ -5,12 +5,35 @@ use strict;
 use Data::Dumper qw(Dumper);
 use File::Basename;
 use List::Util qw( min max );
+use Math::Complex;
 use Cwd;
 
 #Results from analysis of Enrichment Pipeline
 #my $results = $ARGV[0];
-my $results = "/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H4K20me1/H4K20me1.EnrichmentSpecies.Result";
+my $results = "/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.DNAse/DNAse.EnrichmentSpecies.Result";
+#my $results = "/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H2BK120ac/H2BK120ac.EnrichmentSpecies.Result";
+#my $results = "/media/chrys/HDDUbutuMain/Concat.2272017/Alignments.H4K8ac/H4K8ac.EnrichmentSpecies.Result";
+
+#CONTROL
 my $control = "/media/chrys/HDDUbutuMain/Concat.2272017/Control/Control.EnrichmentSpecies.Result";
+
+#liberary list
+my $liberarySizes ="/media/chrys/HDDUbutuMain/Concat.2272017/MarksRange";
+
+#file containing all species
+my $SummarFile = "/media/chrys/HDDUbutuMain/Concat.2272017/Species.Summary.2272017";
+my @features;
+
+open(SUMMARYFILE,$SummarFile) || die;
+
+	while (<SUMMARYFILE>) {
+		chomp;
+
+		my @temp = split(/\s+/,$_);
+
+		push(@features,$temp[0]);
+	}
+
 
 #Decomposition for paths
 my @decomp = split(/\//,$results);
@@ -34,13 +57,31 @@ my %FoldHash;
 #Information like occurence of feature, cummulative length of the feature and mean feature length go here.
 my %SupplementaryHash;
 my $supplLen;
+#LibSize
+my $libSize;
+my $controlLib;
+
+open(LIB,$liberarySizes) || die  "Could not read liberary $liberarySizes :$!";
+
+while (<LIB>) {
+	chomp;
+	my @temp = split(/\s+/);
+
+	if ($temp[0] eq $mark) {
+		$libSize = $temp[2];
+	}
+
+	if ($temp[0] eq "Control") {
+		$controlLib = $temp[2];
+	}
+
+}
 
 open(RESULT,$results) || die "Could not open results $results:$!";
-
 #Read the enrichment calculation results from the output of the RASP Scrit "*.Enrichement.*"
 while(<RESULT>){
 	chomp;
-	my @temp = split("\t");
+	my @temp = split(/\s+/);
 	my $len = $#temp;
 	$supplLen = $len;
 
@@ -64,25 +105,18 @@ while (readdir SHUFFLE) {
 
 
 close(SHUFFLE);
-
-#####################################################
-#													#
-#				CONTROL READING						#
-#													#
-#####################################################
-
-open(CONTROL,$control) || die "Could not open $!";
-
-while (<CONTROL>) {
-	chomp;
-	my @temp = split("\t",$_);
-	$FoldHash{$temp[0]} = $temp[1];
-
-}
-
-
-close(CONTROL);
-
+		
+open(CONTROL,$control) || die "Could not open $!"; 
+													
+while (<CONTROL>) {								
+	chomp;											
+	my @temp = split("\t",$_);						
+	$FoldHash{$temp[0]} = $temp[1];					
+													
+}													
+																								
+close(CONTROL);									
+											
 #Number of permutations done
 my $permNum = scalar( @Shuffles );
 
@@ -115,28 +149,32 @@ for $_(@Shuffles){
 
 close(SHUFRES);
 
+foreach my $element(@features){
+	$EnrichResultsHash{$element} += 1;
+	$FoldHash{$element} += 1;
+}
+
+
+
 my %reportHash;
 my %SumHash;
+my %ShuffleVals;
 
 #Calculation of pValue and a general sum for how many reads there were.
 foreach my $shuffs(sort keys %ShuffResHash){
 
-	#print "NUMBER IS HERE: $shuffs\n";
 	
 	foreach my $shuffedfeatures (keys %{$ShuffResHash{$shuffs}}){
 
 		#If the amount of mapped reads per shuffle was larger then enrichment +1
 		if (exists  $EnrichResultsHash{$shuffedfeatures} ) {
+																							 
+			#Collecting all shuffle values                                
+			                                                                                
+			push(@{$ShuffleVals{$shuffedfeatures}},${ShuffResHash{$shuffs}{$shuffedfeatures}});
 
-			##################################################################################
-			#																				 #
-			# Part of calculating Fold Change by max(Shuffle)                                #
-			#                                                                                #
-			#push(@{$FoldHash{$shuffedfeatures}},${ShuffResHash{$shuffs}{$shuffedfeatures}});#
-			#                                                                                #
-			##################################################################################
 	
-			if ( ${ShuffResHash{$shuffs}{$shuffedfeatures}} > $EnrichResultsHash{$shuffedfeatures}) {
+			if ( ${ShuffResHash{$shuffs}{$shuffedfeatures}} >= $EnrichResultsHash{$shuffedfeatures}) {
 
 				$reportHash{$shuffedfeatures} += 1;
 
@@ -157,45 +195,44 @@ foreach my $shuffs(sort keys %ShuffResHash){
 	}
 }
 
+#Type of analysis either Control or Shuffle - more or less depricated, just leave it on "Control"
+my $type = "Control";
 
-#########################################################################
-#																		#
-# ACTIVATE THIS IF YOU WANT TO CALCULATE FOLD CHANGE BY argmax(#Shuffle)#
-#																		#
-#########################################################################
-# foreach my $keys( keys %SupplementaryHash){							#
-#																		#	
-# 	if (exists $FoldHash{$keys}) {										#
-#																		#
-# 		my $max = max @{$FoldHash{$keys}};								#
-# 		my $res = $EnrichResultsHash{$keys};							#
-# 		my $fold = $res/$max;											#
-#																		#
-# 		$FoldHash{$keys} = $fold;										#
-#																		#
-# 	}																	#
-# }																		#
-#########################################################################
-#																		#
-# CALCULATING FOLD CHANGE BY CONTROL                                    #
-#																		#
-#########################################################################
-#																		#
-# foreach my $keys(keys %SupplementaryHash){							#
-#																		#
-# 	if (exists $FoldHash{$keys}) {										#
-#																		#
-# 		my $res = $EnrichResultsHash{$keys};							#
-# 		my $controlRes = $FoldHash{$keys};								#
-# 		my $fold = $res/$controlRes;									#
-#																		#
-# 		$FoldHash{$keys} = $fold;										#
-#																		#
-# 	}																	#
-# }																		#
-#########################################################################
+my %foldResult;
+																	
+foreach my $keys(@features){
 
-#Output stuff
+	#warn "Looking at $keys\n";
+	my $resultValue;
+	$resultValue = $EnrichResultsHash{$keys};
+
+	#Enrichment Result			
+	$resultValue = $resultValue/$libSize;
+
+	#Shuffle Result max
+	my $shufResult = max @{$ShuffleVals{$keys}};
+
+	#Input control value
+	my $controlRes = $FoldHash{$keys};
+
+	if ($shufResult > $controlRes) {
+		
+		$controlRes = $shufResult;
+
+	}else{
+
+		$controlRes = $FoldHash{$keys};
+	}
+																																		
+	$controlRes = $controlRes/$controlLib;																							
+	my $fold = $resultValue/$controlRes;
+
+								
+	$foldResult{$keys} = logn($fold,2);								
+																																	
+}																		
+
+
 for my $keys (keys %reportHash){
 
 	$reportHash{$keys} = $reportHash{$keys}/$permNum;
@@ -206,13 +243,14 @@ for my $keys(keys %SumHash){
 	$SumHash{$keys} = $SumHash{$keys}/$permNum
 }
 
-my $outPath = $path."/".$mark.".$decomp[1].Analysis.Control";
+my $outPath = $path."/".$mark.".$decomp[1].AnalysisTEST.$type";
 my $supInformation;
 my $FoldChange;
 
 open(OUT,">",$outPath) || die "Could not create $outPath: $!";
 
 print OUT "FeatureName\tReadCount\tpValue\tFoldChange\tFeatureOccurence\tCummulativeLength\tFeatureMeanLength\tMeanShufReadCount\n";
+
 
 
 foreach my $keys(sort keys %reportHash){
@@ -223,22 +261,24 @@ foreach my $keys(sort keys %reportHash){
 
 	}else{
 
-		my $num = $supplLen-1;
+		warn "NA created - Supplementary Information: $keys\n";
+		$supInformation = "NA\tNA\tNA";
 
-		$supInformation = "NA\t" x $num;
-		$EnrichResultsHash{$keys} = 0;
-		$reportHash{$keys} = 1;
+		#$EnrichResultsHash{$keys} = 1;
+		#$reportHash{$keys} = 1;
 
 	}
 
 
-	if (exists $FoldHash{$keys}) {
+	if (exists $foldResult{$keys}) {
 
-		$FoldChange=$FoldHash{$keys};
+		$FoldChange=$foldResult{$keys};
 		
 	}else{
 
-		$FoldChange = "NA"
+		warn "NA created - Fold Enrichment: $keys\n";
+		$FoldChange = "NA";
+
 	}
 
 
@@ -248,7 +288,7 @@ foreach my $keys(sort keys %reportHash){
 
 }
 
-$permNum=$permNum-1;
+$permNum=$permNum;
 print "Number of Shuffles was: $permNum \n";
 
 

@@ -27,6 +27,8 @@ while (<READ1>) {
 	$OriginalIDs{$ID} = join("\t",@temp[0..5]);
 }
 
+close(READ1);
+
 my %EnrichmentHash;
 my %weightsHash;
 
@@ -38,31 +40,50 @@ while (<GETWEIGHTS>) {
 	$weightsHash{$temp[0]} = $temp[1];
 }
 
+close(GETWEIGHTS);
+
 open(READ2,$file3) || die "Could not open $file3: $!";
 my $sum;
-
 
 while (<READ2>) {
  	chomp;
  	my @temp = split(/\s/,$_);
- 	my @IDs = split(":",$temp[4]);
+
+ 	my @IDs = split(":",$temp[1]);
  	
  	my $IDAlignment = $IDs[1];
- 	my $read = $temp[3];
+ 	my $read = $temp[0];
 
 
  	if (exists $OriginalIDs{$IDAlignment}) {
- 		
- 		$EnrichmentHash{$IDAlignment} += $weightsHash{$read};
- 		
+
+ 		if (exists $weightsHash{$read}) {
+
+ 			$EnrichmentHash{$IDAlignment} += $weightsHash{$read};
+ 		}
  	}
 }
 
-foreach my $keys (%EnrichmentHash){
+close(READ2);
 
-	my @Informations = split("\t",$OriginalIDs{$keys});
+
+
+# foreach my $keys (%EnrichmentHash){
+
+# 	print  "Panik at $keys \n";
+
+# 	my @Informations = split("\t",$OriginalIDs{$keys});
+
+# 	my $originalGenomicLocations = join("\t",@Informations[0..2]);
+
+# 	#print "$originalGenomicLocations\t$EnrichmentHash{$keys}\t$keys\n";
+
+# }
+
+foreach my $elements(sort keys %EnrichmentHash){
+
+	my @Informations = split("\t",$OriginalIDs{$elements});
 	my $originalGenomicLocations = join("\t",@Informations[0..2]);
 
-	print "$originalGenomicLocations\tEnrichmentHash{$keys}\t$keys\n";
-
+	print "$originalGenomicLocations\t$EnrichmentHash{$elements}\tID:$elements\n";
 }

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+Species = $1;
+
+Mark=$2;
+
+#1.	Extract all species index positions from original file
+grep -w MER11C RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.2272017
+#CheckSum 844
+
+#2.	Use QuickCompare3 to construct a subset from the questioned species
+
+./QuickCompare3.pl ../MER11C.OriginalPositions ../RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.Merged.2272017 > MER11C.NewMergeTrack
+
+#3. Use BedtoolsIntersect to find alignment subset
+time bedtools intersect -sorted -g ../names.txt -wo -abam H2BK12ac.sorted.bam -b MER11C.NewMergeTrack -bed |  cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  MER11C.Alignments
+
+# 
+
+#4. Calculate Enrichment 

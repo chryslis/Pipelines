@@ -4,10 +4,13 @@ use warnings;
 use strict;
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq);
+use Math::Complex;
 
 #Input requires the location of 
 #my $AlignmentLocations = $ARGV[0];
 my $AlignmentLocations = "/media/chrys/HDDUbutuMain/Concat.2272017/";
+
+my $type = $ARGV[0];
 
 opendir(RESULTS,$AlignmentLocations) || die "Could not read folder $!";
 
@@ -32,7 +35,10 @@ foreach my $folders (@Alignments){
 	opendir (ANALYSIS, $tempPath) || die "Could not read folder $!";
 
 	while (readdir ANALYSIS) {
-		if ($_ =~ m/\.Analysis\.Adjusted/g) {
+
+		# CHANGE CONTROL / SHUFFLE
+
+		if ($_ =~ m/\.Analysis\.$type\.Adjusted/g) {
 
 			$tempPath = $AlignmentLocations.$folders."/".$_;
 
@@ -45,6 +51,7 @@ foreach my $folders (@Alignments){
 
 #StashHash for Marks -> Families -> Binary
 my %ResultsHash;
+my %ResultsHash_FoldChanges;
 
 ###############################
 #    THRESHOLDS ARE here      #
@@ -52,8 +59,7 @@ my %ResultsHash;
 
 
 my $signif = 0.05;
-my $signifFold = 2.0;
-
+my $signifFold = 1.0;
 
 my @Features;
 my @Marks;
@@ -65,13 +71,14 @@ foreach my $AnalysisFiles(@AllMarks){
 	my $mark = $temp2[0];
 	push(@Marks,$mark);
 
-
+	warn "Current file $AnalysisFiles\n";
 
 	open(READ,$AnalysisFiles) || die "Could not open $AnalysisFiles : $!";
 
 	while (<READ>) {
 		chomp;
 		if ($_ =~ /^FeatureName.+/g) {
+
 				next;
 		}
 
@@ -81,10 +88,25 @@ foreach my $AnalysisFiles(@AllMarks){
 		my $pVal = $temp[3];
 		my $FoldChange = $temp[4];
 		my $bin;
+		my $FoldChangeSamples;
 
-		if ($pVal < $signif && $FoldChange > $signifFold) {
+
+		if( $FoldChange eq "NA"){
+
+			$FoldChangeSamples = "NA";
+
+		}else{
+
+			$FoldChangeSamples = $FoldChange;
+
+		}
+
+
+		if ($pVal <= $signif && $FoldChangeSamples >= $signifFold) {
 
 			$bin = 1;
+			
+
 
 		}else{
 			
@@ -93,6 +115,15 @@ foreach my $AnalysisFiles(@AllMarks){
 
 		$ResultsHash{$mark}{$feature} = $bin;
 
+		if( $FoldChange eq "NA"){
+
+			$ResultsHash_FoldChanges{$mark}{$feature} = "NA";
+
+		}else{
+
+			$ResultsHash_FoldChanges{$mark}{$feature} = $FoldChange;
+
+		}
 	}	
 }
 
@@ -108,11 +139,16 @@ my $ID = $1;
 
 
 
-open(OUTPUT,">$AlignmentLocations/EnrichmentMatrix.Control.$ID");
+open(OUTPUT,">$AlignmentLocations/EnrichmentMatrix.$type.$ID");
+open(OUTPUT2,">$AlignmentLocations/FoldChangeMatrix.$type.$ID");
+
 
 my $header = join("\t",@uniqFeatures);
 print OUTPUT "\t$header";
 print  OUTPUT "\n";
+
+print OUTPUT2 "\t$header";
+print  OUTPUT2 "\n";
 
 open(OUTFEATURE,">$AlignmentLocations/FeatureList.$ID") || die "Could not open, $!";
 print OUTFEATURE "$header";
@@ -122,28 +158,25 @@ print OUTFEATURE "$header";
 sub tabdel {
 
 
-foreach my $marks(@uniqMarks){
+	foreach my $marks(@uniqMarks){
 
-	print OUTPUT "$marks";
+		print OUTPUT "$marks";
+		print OUTPUT2 "$marks";
 
-	foreach my $feature(@uniqFeatures){
+		foreach my $feature(@uniqFeatures){
 
-		if (exists $ResultsHash{$marks}{$feature}) {
+			if (exists $ResultsHash{$marks}{$feature}) {
 
-			print OUTPUT "\t$ResultsHash{$marks}{$feature}"; 
-			#print "Value: $ResultsHash{$marks}{$feature}\t"
+				print OUTPUT "\t$ResultsHash{$marks}{$feature}";
+				print OUTPUT2 "\t$ResultsHash_FoldChanges{$marks}{$feature}";
+			}
 		}
+
+		print OUTPUT "\n";
+		print OUTPUT2 "\n";
 	}
-	print OUTPUT "\n";
 }
 
-}
+
 
 tabdel();
-
-
-
-
-#print Dumper \%ResultsHash;
-
-

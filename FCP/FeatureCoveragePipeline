@@ -7,6 +7,9 @@ outDir=$(dirname "${ConcGenome}")
 
 PipeLoc=$PWD
 
+COVERAGE=/home/chrys/Documents/thesis/data/Pipelines/FCP/SpeciesCoverage.pl
+POSTCONCAT=/home/chrys/Documents/thesis/data/Pipelines/FCP/PostConcat_FCP.pl
+
 #Select Species
 Species = $1;
 
@@ -14,26 +17,47 @@ grep -w $Species  $outDir/RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.227201
 
 ./QuickCompare3.pl $outDir/$Species.OriginalPositions $outDir/RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.Merged.2272017 > $Species.MergeTrack
 
+bedtools sort -faidx $outDir/names.txt -i $Index > $outDir/$Species.MergeTrackResorted
+
 #Give a list of marks you want to analyze
+
 MarkList=$2;
 
-for i in $(cat $MarkList); do
+for i in $(cat MarkList.Control ); do
 
-	time bedtools intersect -wo -abam $outDir/Alignments.$i/$i.sorted.bam -b $outDir/$Species.MergeTrack -bed |
-	cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  $outDir/Alignments.$i/$Species.Alignment
+	echo $i;
+	
+	bedtools intersect -wo -abam $outDir/Alignments.$i/$i.sorted.bam -b $outDir/$Species.MergeTrack -bed |
+	cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  $outDir/Alignments.$i/$i.$Species.Alignment
 
-	$COVERAGE $outDir/$Species.OriginalPositions $outDir/Alignments.$i/$i.ReadWeightVector $outDir/Alignments.$i/$i.$Species.Alignment > $outDir/Alignments.$i/$i.$Species.Coverage ;done
+	bedtools coverage -sorted -g ../names.txt -a $outDir/$Species.MergeTrackResorted -b $outDir/Alignments.$i/$i.sorted.bam > $outDir/Alignments.$i/$i.$Species.Bedtools.Coverage
+
+	cat $outDir/Alignments.$i/$i.$Species.Alignment | $POSTCONCAT $outDir/Alignments.$i/$i.$Species.Bedtools.Coverage > $outDir/Alignments.$i/$i.Alignments.Filtered
+
+	$COVERAGE $outDir/$Species.OriginalPositions $outDir/Alignments.$i/$i.ReadWeightVector $outDir/Alignments.$i/$i.$Species.Alignment > $outDir/Alignments.$i/$i.$Species.Coverage
 
 done
 
+#Species Fold Change
 
-#2.	Use QuickCompare3 to construct a subset from the questioned species
+#1. Extract Libsize
+#2. Extract Species Enrichments
+#3. Extract Control Enrichments
+#4. Divide Control Enrichments by LibSize Control
+#Control	3936475	22709383
+#5. Divide Mark Enrichments by LibSize Mark
+#awk '{printf "%.8f\n",$1/22027736}' H3K4me2.Enrichment > H3K4me2.Enrichment.Corrected
+#paste H3K4me2.Enrichment.Corrected Control.Enrichment.Corrected > H3K4me2.FoldEnrichment
 
- ../$Species.OriginalPositions ../RepeatMaskerTrack.Sorted.Cleaned.July17.Indexed.Merged.2272017 > MER11C.NewMergeTrack
+#6. Llog2(result)
 
-#3. Use BedtoolsIntersect to find alignment subset
-time bedtools intersect -wo -abam H2BK12ac.sorted.bam -b MER11C.NewMergeTrack -bed |  cut -f1,2,3,4,16 | awk '{var=$4; split($4,a,".");$4 =a[2];print}' >  MER11C.Alignments
+#Filter
+#Bedtools coverage
 
-# 
+#bedtools coverage -sorted -g ../names.txt -a ../LTR7Y.MergeTrackResorted -b H3K18ac.sorted.bam > LTR7Y.Bedtools.Coverage
 
-#4. Calculate Enrichment 
+#cat $outDir/Alignments.H3K18ac/H3K18ac.LTR7Y.Alignment | $POSTCONCAT LTR7Y.Bedtools.Coverage > H3K18ac.Alignments.Filtered
+
+#$COVERAGE $outDir/LTR7Y.OriginalPositions $outDir/Alignments.H3K18ac/H3K18ac.ReadWeightVector H3K18ac.Alignments.Filtered > H3K18ac.LTR7Y.Coverage
+
+#cut -f4 *.Bedtools.Coverage | awk '{var += $1}END{print var}'

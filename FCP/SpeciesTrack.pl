@@ -6,11 +6,14 @@ use Data::Dumper qw(Dumper);
 use List::Util qw( min max );
 
 #Subsetted File of the Repeat Masker Track 
-my $file1 = $ARGV[0];
+#my $file1 = $ARGV[0];
+my $file1 = "/media/chrys/HDDUbutuMain/Concat.2272017/LTR7Y.OriginalPositions";
 
 #MergeIndex
 #./QuickCompare3.pl ../MER11C.OriginalPositions ../MergeIndex.2272017.bed > MER11C.NewMergeTrack
-my $file2 = $ARGV[1];
+#my $file2 = $ARGV[1];
+my $file2= "/media/chrys/HDDUbutuMain/Concat.2272017/MergeIndex.2272017.bed";
+
 
 
 
